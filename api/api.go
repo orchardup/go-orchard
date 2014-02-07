@@ -30,8 +30,8 @@ type AuthResponse struct {
 	Token string
 }
 
-func (api HTTPClient) GetAuthToken(username string, password string) (string, error) {
-	resp, err := http.PostForm(api.BaseURL+"/signin",
+func (client HTTPClient) GetAuthToken(username string, password string) (string, error) {
+	resp, err := http.PostForm(client.BaseURL+"/signin",
 		url.Values{"username": {username}, "password": {password}})
 
 	if err != nil {
