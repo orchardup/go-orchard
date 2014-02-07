@@ -68,3 +68,20 @@ func TestCreateHost(t *testing.T) {
 		t.Errorf("expected 'newhost', got '%s' (host: %v)", host.Name, host)
 	}
 }
+
+func TestDeleteHost(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "DELETE" || r.URL.Path != "/hosts/myhost" {
+			t.Errorf("expected DELETE request to /hosts/myhost, got %s request to %s", r.Method, r.URL.Path)
+		}
+
+		fmt.Fprintln(w, "")
+	}))
+
+	client := HTTPClient{ts.URL, "dummy_token"}
+
+	err := client.DeleteHost("myhost")
+	if err != nil {
+		t.Error(err)
+	}
+}

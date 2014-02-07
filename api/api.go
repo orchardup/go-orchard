@@ -12,6 +12,7 @@ type Client interface {
 	GetAuthToken(string, string) (string, error)
 	GetHosts() ([]Host, error)
 	CreateHost(string) (Host, error)
+	DeleteHost(string) error
 }
 
 type Host struct {
@@ -76,6 +77,18 @@ func (client HTTPClient) CreateHost(name string) (Host, error) {
 	return host, nil
 }
 
+func (client HTTPClient) DeleteHost(name string) error {
+	req, err := http.NewRequest("DELETE", client.BaseURL+"/hosts/"+name, nil)
+	if err != nil {
+		return err
+	}
+	if err := client.DoRequest(req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (client HTTPClient) DoRequest(req *http.Request, v interface{}) error {
 	cl := &http.Client{}
 	req.Header.Set("Authorization", "Token "+client.Token)
@@ -83,8 +96,10 @@ func (client HTTPClient) DoRequest(req *http.Request, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := DecodeResponse(resp, &v); err != nil {
-		return err
+	if v != nil {
+		if err := DecodeResponse(resp, &v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
