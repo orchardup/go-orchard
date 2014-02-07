@@ -8,13 +8,6 @@ import "net/url"
 import "net/http"
 import "encoding/json"
 
-type Client interface {
-	GetAuthToken(string, string) (string, error)
-	GetHosts() ([]Host, error)
-	CreateHost(string) (Host, error)
-	DeleteHost(string) error
-}
-
 type Host struct {
 	ID   string
 	Name string
@@ -30,7 +23,7 @@ type AuthResponse struct {
 	Token string
 }
 
-func (client HTTPClient) GetAuthToken(username string, password string) (string, error) {
+func (client *HTTPClient) GetAuthToken(username string, password string) (string, error) {
 	resp, err := http.PostForm(client.BaseURL+"/signin",
 		url.Values{"username": {username}, "password": {password}})
 
@@ -47,7 +40,7 @@ func (client HTTPClient) GetAuthToken(username string, password string) (string,
 	return authResponse.Token, nil
 }
 
-func (client HTTPClient) GetHosts() ([]Host, error) {
+func (client *HTTPClient) GetHosts() ([]Host, error) {
 	var hosts []Host
 
 	req, err := http.NewRequest("GET", client.BaseURL+"/hosts", nil)
@@ -61,7 +54,7 @@ func (client HTTPClient) GetHosts() ([]Host, error) {
 	return hosts, nil
 }
 
-func (client HTTPClient) CreateHost(name string) (Host, error) {
+func (client *HTTPClient) CreateHost(name string) (Host, error) {
 	var host Host
 
 	v := url.Values{}
@@ -77,7 +70,7 @@ func (client HTTPClient) CreateHost(name string) (Host, error) {
 	return host, nil
 }
 
-func (client HTTPClient) DeleteHost(name string) error {
+func (client *HTTPClient) DeleteHost(name string) error {
 	req, err := http.NewRequest("DELETE", client.BaseURL+"/hosts/"+name, nil)
 	if err != nil {
 		return err
@@ -89,7 +82,7 @@ func (client HTTPClient) DeleteHost(name string) error {
 	return nil
 }
 
-func (client HTTPClient) DoRequest(req *http.Request, v interface{}) error {
+func (client *HTTPClient) DoRequest(req *http.Request, v interface{}) error {
 	cl := &http.Client{}
 	req.Header.Set("Authorization", "Token "+client.Token)
 	resp, err := cl.Do(req)
