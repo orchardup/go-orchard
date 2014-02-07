@@ -46,41 +46,46 @@ func (api HTTPClient) GetAuthToken(username string, password string) (string, er
 }
 
 func (api HTTPClient) GetHosts(token string) ([]Host, error) {
-	client := &http.Client{}
+	var hosts []Host
+
 	req, err := http.NewRequest("GET", api.BaseURL+"/hosts", nil)
 	if err != nil {
 		return []Host{}, err
 	}
-	req.Header.Set("Authorization", "Token "+token)
-	resp, err := client.Do(req)
-	if err != nil {
+	if err := DoRequest(req, token, &hosts); err != nil {
 		return []Host{}, err
 	}
-	var hosts []Host
-	if err := DecodeResponse(resp, &hosts); err != nil {
-		return []Host{}, err
-	}
+
 	return hosts, nil
 }
 
 func (api HTTPClient) CreateHost(token string, name string) (Host, error) {
-	client := &http.Client{}
+	var host Host
+
 	v := url.Values{}
 	v.Set("name", name)
 	req, err := http.NewRequest("POST", api.BaseURL+"/hosts", strings.NewReader(v.Encode()))
 	if err != nil {
 		return Host{}, err
 	}
+	if err := DoRequest(req, token, &host); err != nil {
+		return Host{}, err
+	}
+
+	return host, nil
+}
+
+func DoRequest(req *http.Request, token string, v interface{}) error {
+	client := &http.Client{}
 	req.Header.Set("Authorization", "Token "+token)
 	resp, err := client.Do(req)
 	if err != nil {
-		return Host{}, err
+		return err
 	}
-	var host Host
-	if err := DecodeResponse(resp, &host); err != nil {
-		return Host{}, err
+	if err := DecodeResponse(resp, &v); err != nil {
+		return err
 	}
-	return host, nil
+	return nil
 }
 
 func DecodeResponse(resp *http.Response, v interface{}) error {
