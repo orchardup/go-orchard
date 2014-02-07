@@ -9,6 +9,13 @@ import "encoding/json"
 
 type Client interface {
 	GetAuthToken(string, string) (string, error)
+	GetHosts(string) ([]Host, error)
+}
+
+type Host struct {
+	ID   string
+	Name string
+	URL  string
 }
 
 type HTTPClient struct {
@@ -34,6 +41,24 @@ func (api HTTPClient) GetAuthToken(username string, password string) (string, er
 	}
 
 	return authResponse.Token, nil
+}
+
+func (api HTTPClient) GetHosts(token string) ([]Host, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", api.BaseURL+"/hosts", nil)
+	if err != nil {
+		return []Host{}, err
+	}
+	req.Header.Set("Authorization", "Token "+token)
+	resp, err := client.Do(req)
+	if err != nil {
+		return []Host{}, err
+	}
+	var hosts []Host
+	if err := DecodeResponse(resp, &hosts); err != nil {
+		return []Host{}, err
+	}
+	return hosts, nil
 }
 
 func DecodeResponse(resp *http.Response, v interface{}) error {

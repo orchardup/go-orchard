@@ -14,7 +14,12 @@ func main() {
 		fmt.Printf("Error getting token:\n%s\n", err)
 		return
 	}
-	fmt.Printf("token: %s\n", token)
+	hosts, err := httpClient.GetHosts(token)
+	if err != nil {
+		fmt.Printf("Error getting hosts:\n%s\n", err)
+		return
+	}
+	fmt.Printf("hosts: %v\n", hosts)
 }
 
 func Prompt() (string, string) {
