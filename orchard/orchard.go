@@ -5,8 +5,8 @@ import "github.com/orchardup/orchard/api"
 import "code.google.com/p/gopass"
 
 func main() {
-	var httpClient api.Client
-	httpClient = api.HTTPClient{"http://localdocker:8000/api/v1"}
+	var httpClient api.HTTPClient
+	httpClient = api.HTTPClient{"http://localdocker:8000/api/v1", ""}
 
 	username, password := Prompt()
 	token, err := httpClient.GetAuthToken(username, password)
@@ -14,7 +14,8 @@ func main() {
 		fmt.Printf("Error getting token:\n%s\n", err)
 		return
 	}
-	hosts, err := httpClient.GetHosts(token)
+	httpClient.Token = token
+	hosts, err := httpClient.GetHosts()
 	if err != nil {
 		fmt.Printf("Error getting hosts:\n%s\n", err)
 		return

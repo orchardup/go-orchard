@@ -23,9 +23,9 @@ func TestGetHosts(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client := HTTPClient{ts.URL}
+	client := HTTPClient{ts.URL, "dummy_token"}
 
-	hosts, err := client.GetHosts("dummy_token")
+	hosts, err := client.GetHosts()
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,9 +58,9 @@ func TestCreateHost(t *testing.T) {
     }`)
 	}))
 
-	client := HTTPClient{ts.URL}
+	client := HTTPClient{ts.URL, "dummy_token"}
 
-	host, err := client.CreateHost("dummy_token", "newhost")
+	host, err := client.CreateHost("newhost")
 	if err != nil {
 		t.Error(err)
 	}

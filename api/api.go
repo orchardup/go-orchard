@@ -10,7 +10,7 @@ import "encoding/json"
 
 type Client interface {
 	GetAuthToken(string, string) (string, error)
-	GetHosts(string) ([]Host, error)
+	GetHosts() ([]Host, error)
 	CreateHost(string) (Host, error)
 }
 
@@ -22,6 +22,7 @@ type Host struct {
 
 type HTTPClient struct {
 	BaseURL string
+	Token   string
 }
 
 type AuthResponse struct {
@@ -45,40 +46,40 @@ func (api HTTPClient) GetAuthToken(username string, password string) (string, er
 	return authResponse.Token, nil
 }
 
-func (api HTTPClient) GetHosts(token string) ([]Host, error) {
+func (client HTTPClient) GetHosts() ([]Host, error) {
 	var hosts []Host
 
-	req, err := http.NewRequest("GET", api.BaseURL+"/hosts", nil)
+	req, err := http.NewRequest("GET", client.BaseURL+"/hosts", nil)
 	if err != nil {
 		return []Host{}, err
 	}
-	if err := DoRequest(req, token, &hosts); err != nil {
+	if err := client.DoRequest(req, &hosts); err != nil {
 		return []Host{}, err
 	}
 
 	return hosts, nil
 }
 
-func (api HTTPClient) CreateHost(token string, name string) (Host, error) {
+func (client HTTPClient) CreateHost(name string) (Host, error) {
 	var host Host
 
 	v := url.Values{}
 	v.Set("name", name)
-	req, err := http.NewRequest("POST", api.BaseURL+"/hosts", strings.NewReader(v.Encode()))
+	req, err := http.NewRequest("POST", client.BaseURL+"/hosts", strings.NewReader(v.Encode()))
 	if err != nil {
 		return Host{}, err
 	}
-	if err := DoRequest(req, token, &host); err != nil {
+	if err := client.DoRequest(req, &host); err != nil {
 		return Host{}, err
 	}
 
 	return host, nil
 }
 
-func DoRequest(req *http.Request, token string, v interface{}) error {
-	client := &http.Client{}
-	req.Header.Set("Authorization", "Token "+token)
-	resp, err := client.Do(req)
+func (client HTTPClient) DoRequest(req *http.Request, v interface{}) error {
+	cl := &http.Client{}
+	req.Header.Set("Authorization", "Token "+client.Token)
+	resp, err := cl.Do(req)
 	if err != nil {
 		return err
 	}
