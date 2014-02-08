@@ -1,6 +1,8 @@
 package main
 
 import "fmt"
+import "os"
+import "text/tabwriter"
 import "github.com/orchardup/orchard/cli"
 import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
 
@@ -56,7 +58,12 @@ func Hosts(args map[string]interface{}) error {
 			return err
 		}
 
-		fmt.Printf("hosts: %v\n", hosts)
+		writer := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
+		fmt.Fprintln(writer, "ID\tNAME")
+		for _, host := range hosts {
+			fmt.Fprintf(writer, "%s\t%s\n", host.ID, host.Name)
+		}
+		writer.Flush()
 	}
 
 	return nil
