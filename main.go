@@ -16,7 +16,7 @@ Usage:
   orchard hosts
   orchard hosts create NAME
   orchard hosts rm NAME
-  orchard docker COMMAND...
+  orchard docker [COMMAND...]
 
 Options:
   -h --help   Show this screen.
