@@ -1,4 +1,4 @@
-package main
+package authenticator
 
 import "fmt"
 import "os"
@@ -8,21 +8,6 @@ import "io/ioutil"
 import "crypto/md5"
 import "github.com/orchardup/orchard/api"
 import "code.google.com/p/gopass"
-
-func main() {
-	httpClient, err := Authenticate()
-	if err != nil {
-		fmt.Printf("Error authenticating:\n%s\n", err)
-	}
-
-	hosts, err := httpClient.GetHosts()
-	if err != nil {
-		fmt.Printf("Error getting hosts:\n%s\n", err)
-		return
-	}
-
-	fmt.Printf("hosts: %v\n", hosts)
-}
 
 func Authenticate() (*api.HTTPClient, error) {
 	httpClient := api.HTTPClient{"http://localdocker:8000/api/v1", ""}
