@@ -10,7 +10,7 @@ import "github.com/orchardup/orchard/api"
 import "github.com/orchardup/orchard/code.google.com/p/gopass"
 
 func Authenticate() (*api.HTTPClient, error) {
-	httpClient := api.HTTPClient{"http://localdocker:8000/api/v1", ""}
+	httpClient := api.HTTPClient{GetAPIURL(), ""}
 
 	tokenFile, err := GetTokenFilePath(httpClient.BaseURL)
 	if err != nil {
@@ -35,6 +35,16 @@ func Authenticate() (*api.HTTPClient, error) {
 	}
 
 	return &httpClient, nil
+}
+
+func GetAPIURL() string {
+	apiURL := os.Getenv("ORCHARD_API_URL")
+
+	if apiURL == "" {
+		apiURL = "https://orchardup.com/api/v1"
+	}
+
+	return apiURL
 }
 
 func GetTokenFilePath(baseURL string) (string, error) {
