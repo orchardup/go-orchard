@@ -45,7 +45,7 @@ func (p *Proxy) Start() {
 }
 
 func (p *Proxy) Stop() {
-	if p.Listener != nil {
+	if *p.Listener != nil {
 		(*p.Listener).Close()
 	}
 }

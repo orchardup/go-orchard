@@ -38,7 +38,7 @@ Options:
 
 		err := <-p.ErrorChannel
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("proxy failed to start: '%v'\n", err)
 		} else {
 			err := CallDocker(args["COMMAND"].([]string))
 			fmt.Println("docker finished")
