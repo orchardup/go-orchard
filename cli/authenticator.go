@@ -7,7 +7,7 @@ import "io"
 import "io/ioutil"
 import "crypto/md5"
 import "github.com/orchardup/orchard/api"
-import "code.google.com/p/gopass"
+import "github.com/orchardup/orchard/code.google.com/p/gopass"
 
 func Authenticate() (*api.HTTPClient, error) {
 	httpClient := api.HTTPClient{"http://localdocker:8000/api/v1", ""}
