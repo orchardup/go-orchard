@@ -4,7 +4,10 @@ import "fmt"
 import "os"
 import "text/tabwriter"
 import "github.com/orchardup/orchard/cli"
+import "github.com/orchardup/orchard/proxy"
 import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
+
+import "os/exec"
 
 func main() {
 	usage := `Orchard.
@@ -29,9 +32,36 @@ Options:
 		if err := Hosts(args); err != nil {
 			fmt.Println(err)
 		}
+	} else if args["docker"] == true {
+		p := proxy.New("unix", "/tmp/orchard.sock", "tcp", "localdocker:4243")
+		go p.Start()
+
+		err := <-p.ErrorChannel
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			err := CallDocker(args["COMMAND"].([]string))
+			fmt.Println("docker finished")
+			if err != nil {
+				fmt.Printf("docker returned error: '%v'\n", err)
+			}
+		}
+
+		fmt.Println("stopping proxy")
+		p.Stop()
 	} else {
 		fmt.Println(args)
 	}
+}
+
+func CallDocker(args []string) error {
+	// TODO: handle case where docker isn't installed
+	cmd := exec.Command("/usr/local/bin/docker", args...)
+	cmd.Env = []string{"DOCKER_HOST=unix:///tmp/orchard.sock"}
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func Hosts(args map[string]interface{}) error {
