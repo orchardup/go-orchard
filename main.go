@@ -40,10 +40,15 @@ Options:
 		if err != nil {
 			fmt.Printf("proxy failed to start: '%v'\n", err)
 		} else {
-			err := CallDocker(args["COMMAND"].([]string))
-			fmt.Println("docker finished")
+			err := CallDocker(
+				args["COMMAND"].([]string),
+				[]string{
+					"DOCKER_HOST=unix:///tmp/orchard.sock",
+					"DEBUG=1",
+				},
+			)
 			if err != nil {
-				fmt.Printf("docker returned error: '%v'\n", err)
+				fmt.Printf("docker failed: %v\n", err)
 			}
 		}
 
@@ -54,10 +59,10 @@ Options:
 	}
 }
 
-func CallDocker(args []string) error {
+func CallDocker(args []string, env []string) error {
 	// TODO: handle case where docker isn't installed
 	cmd := exec.Command("/usr/local/bin/docker", args...)
-	cmd.Env = []string{"DOCKER_HOST=unix:///tmp/orchard.sock"}
+	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
