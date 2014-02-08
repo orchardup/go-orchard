@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "os"
+import "path"
 import "io"
 import "io/ioutil"
 import "crypto/md5"
@@ -61,11 +62,11 @@ func GetTokenFilePath(baseURL string) (string, error) {
 	io.WriteString(h, baseURL)
 	hash := fmt.Sprintf("%x", h.Sum(nil))
 
-	return tokenDir + hash, nil
+	return path.Join(tokenDir, hash), nil
 }
 
 func GetTokenDir() (string, error) {
-	tokenDir := os.Getenv("HOME") + "/.orchard/api_tokens/"
+	tokenDir := path.Join(os.Getenv("HOME"), ".orchard", "api_tokens")
 	err := os.MkdirAll(tokenDir, 0700)
 	if err != nil {
 		return "", err
