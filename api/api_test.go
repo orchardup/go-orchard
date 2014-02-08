@@ -2,8 +2,8 @@ package api
 
 import "testing"
 import "fmt"
+import "encoding/json"
 import "io/ioutil"
-import "net/url"
 import "net/http"
 import "net/http/httptest"
 
@@ -43,11 +43,16 @@ func TestCreateHost(t *testing.T) {
 			t.Errorf("expected HTTP request to /hosts, got %s", r.URL.Path)
 		}
 
-		body, _ := ioutil.ReadAll(r.Body)
-		v, _ := url.ParseQuery(string(body))
+		if r.Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected application/json, got %s", r.Header.Get("Content-Type"))
+		}
 
-		if v.Get("name") != "newhost" {
-			t.Errorf("expected 'newhost', got '%s'", v.Get("name"))
+		body, _ := ioutil.ReadAll(r.Body)
+		var data map[string]string
+		json.Unmarshal(body, &data)
+
+		if data["name"] != "newhost" {
+			t.Errorf("expected 'newhost', got '%s'", data["name"])
 		}
 
 		w.WriteHeader(201)

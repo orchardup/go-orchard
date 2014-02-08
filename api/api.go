@@ -2,7 +2,7 @@ package api
 
 import "fmt"
 import "errors"
-import "strings"
+import "bytes"
 import "io/ioutil"
 import "net/url"
 import "net/http"
@@ -57,9 +57,14 @@ func (client *HTTPClient) GetHosts() ([]Host, error) {
 func (client *HTTPClient) CreateHost(name string) (Host, error) {
 	var host Host
 
-	v := url.Values{}
-	v.Set("name", name)
-	req, err := http.NewRequest("POST", client.BaseURL+"/hosts", strings.NewReader(v.Encode()))
+	v := make(map[string]string)
+	v["name"] = name
+	body, err := json.Marshal(v)
+	if err != nil {
+		return Host{}, err
+	}
+
+	req, err := http.NewRequest("POST", client.BaseURL+"/hosts", bytes.NewReader(body))
 	if err != nil {
 		return Host{}, err
 	}
@@ -85,6 +90,7 @@ func (client *HTTPClient) DeleteHost(name string) error {
 func (client *HTTPClient) DoRequest(req *http.Request, v interface{}) error {
 	cl := &http.Client{}
 	req.Header.Set("Authorization", "Token "+client.Token)
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := cl.Do(req)
 	if err != nil {
 		return err
