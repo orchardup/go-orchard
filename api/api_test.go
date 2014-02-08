@@ -85,3 +85,17 @@ func TestDeleteHost(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestDeleteHostError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+		fmt.Fprintln(w, "I broke :(")
+	}))
+
+	client := HTTPClient{ts.URL, "dummy_token"}
+
+	err := client.DeleteHost("myhost")
+	if err == nil {
+		t.Error("expected DeleteHost() to return an error")
+	}
+}

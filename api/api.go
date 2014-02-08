@@ -89,10 +89,8 @@ func (client *HTTPClient) DoRequest(req *http.Request, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	if v != nil {
-		if err := DecodeResponse(resp, &v); err != nil {
-			return err
-		}
+	if err := DecodeResponse(resp, v); err != nil {
+		return err
 	}
 	return nil
 }
@@ -107,8 +105,10 @@ func DecodeResponse(resp *http.Response, v interface{}) error {
 		return errors.New(fmt.Sprintf("erroneous API response: %s", body))
 	}
 
-	if err := json.Unmarshal(body, &v); err != nil {
-		return err
+	if v != nil {
+		if err := json.Unmarshal(body, &v); err != nil {
+			return err
+		}
 	}
 
 	return nil
