@@ -96,9 +96,9 @@ func Hosts(args map[string]interface{}) error {
 		}
 
 		writer := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
-		fmt.Fprintln(writer, "ID\tNAME")
+		fmt.Fprintln(writer, "NAME\tIP")
 		for _, host := range hosts {
-			fmt.Fprintf(writer, "%s\t%s\n", host.ID, host.Name)
+			fmt.Fprintf(writer, "%s\t%s\n", host.Name, host.IPv4_Address)
 		}
 		writer.Flush()
 	}

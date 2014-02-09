@@ -9,9 +9,10 @@ import "net/http"
 import "encoding/json"
 
 type Host struct {
-	ID   string
-	Name string
-	URL  string
+	ID           string
+	Name         string
+	URL          string
+	IPv4_Address string
 }
 
 type HTTPClient struct {
