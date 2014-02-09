@@ -5,28 +5,24 @@ import "io"
 
 type Proxy struct {
 	ErrorChannel chan error
-	FromType     string
-	FromAddr     string
-	ToType       string
-	ToAddr       string
+	ListenFunc   func() (net.Listener, error)
+	DialFunc     func() (net.Conn, error)
 
 	Listener *net.Listener
 }
 
-func New(fromType string, fromAddr string, toType string, toAddr string) *Proxy {
+func New(listenFunc func() (net.Listener, error), dialFunc func() (net.Conn, error)) *Proxy {
 	p := new(Proxy)
 
 	p.ErrorChannel = make(chan error)
-	p.FromType = fromType
-	p.FromAddr = fromAddr
-	p.ToType = toType
-	p.ToAddr = toAddr
+	p.ListenFunc = listenFunc
+	p.DialFunc = dialFunc
 
 	return p
 }
 
 func (p *Proxy) Start() {
-	listener, err := net.Listen(p.FromType, p.FromAddr)
+	listener, err := p.ListenFunc()
 	p.Listener = &listener
 	if err != nil {
 		p.ErrorChannel <- err
@@ -52,7 +48,7 @@ func (p *Proxy) Stop() {
 
 func (p *Proxy) ForwardConnection(clientConn net.Conn) {
 	defer clientConn.Close()
-	serverConn, err := net.Dial(p.ToType, p.ToAddr)
+	serverConn, err := p.DialFunc()
 	if err != nil {
 		panic(err)
 	}

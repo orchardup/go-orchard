@@ -7,6 +7,7 @@ import "github.com/orchardup/orchard/cli"
 import "github.com/orchardup/orchard/proxy"
 import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
 
+import "net"
 import "os/exec"
 import "os/signal"
 import "syscall"
@@ -38,7 +39,10 @@ Options:
 	} else if args["docker"] == true || args["proxy"] == true {
 		socketPath := "/tmp/orchard.sock"
 
-		p := proxy.New("unix", socketPath, "tcp", "localdocker:4243")
+		p := proxy.New(
+			func() (net.Listener, error) { return net.Listen("unix", socketPath) },
+			func() (net.Conn, error) { return net.Dial("tcp", "localdocker:4243") },
+		)
 		go p.Start()
 		defer p.Stop()
 
