@@ -36,11 +36,11 @@ func (p *Proxy) Start() {
 	p.ErrorChannel <- nil
 
 	for {
-		incoming, err := listener.Accept()
+		clientConn, err := listener.Accept()
 		if err != nil {
 			panic(err)
 		}
-		go p.ForwardConnection(incoming)
+		go p.ForwardConnection(clientConn)
 	}
 }
 
@@ -50,11 +50,30 @@ func (p *Proxy) Stop() {
 	}
 }
 
-func (p *Proxy) ForwardConnection(incoming net.Conn) {
-	outgoing, err := net.Dial(p.ToType, p.ToAddr)
+func (p *Proxy) ForwardConnection(clientConn net.Conn) {
+	defer clientConn.Close()
+	serverConn, err := net.Dial(p.ToType, p.ToAddr)
 	if err != nil {
 		panic(err)
 	}
-	go io.Copy(incoming, outgoing)
-	go io.Copy(outgoing, incoming)
+	defer serverConn.Close()
+	complete := make(chan bool)
+	go Copy(serverConn, clientConn, complete)
+	go Copy(clientConn, serverConn, complete)
+	<-complete
+	<-complete
+}
+
+func Copy(to net.Conn, from net.Conn, complete chan bool) {
+	io.Copy(to, from)
+	CloseWrite(to)
+	complete <- true
+}
+
+func CloseWrite(rwc net.Conn) {
+	if tcpc, ok := rwc.(*net.TCPConn); ok {
+		tcpc.CloseWrite()
+	} else if unixc, ok := rwc.(*net.UnixConn); ok {
+		unixc.CloseWrite()
+	}
 }

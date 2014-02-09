@@ -8,6 +8,8 @@ import "github.com/orchardup/orchard/proxy"
 import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
 
 import "os/exec"
+import "os/signal"
+import "syscall"
 
 func main() {
 	usage := `Orchard.
@@ -17,6 +19,7 @@ Usage:
   orchard hosts create NAME
   orchard hosts rm NAME
   orchard docker [COMMAND...]
+  orchard proxy
 
 Options:
   -h --help   Show this screen.
@@ -32,30 +35,29 @@ Options:
 		if err := Hosts(args); err != nil {
 			fmt.Println(err)
 		}
-	} else if args["docker"] == true {
-		p := proxy.New("unix", "/tmp/orchard.sock", "tcp", "localdocker:4243")
-		go p.Start()
+	} else if args["docker"] == true || args["proxy"] == true {
+		socketPath := "/tmp/orchard.sock"
 
-		err := <-p.ErrorChannel
-		if err != nil {
-			fmt.Printf("proxy failed to start: '%v'\n", err)
-		} else {
-			err := CallDocker(
-				args["COMMAND"].([]string),
-				[]string{
-					"DOCKER_HOST=unix:///tmp/orchard.sock",
-					"DEBUG=1",
-				},
-			)
-			if err != nil {
-				fmt.Printf("docker failed: %v\n", err)
-			}
+		p := proxy.New("unix", socketPath, "tcp", "localdocker:4243")
+		go p.Start()
+		defer p.Stop()
+
+		if err := <-p.ErrorChannel; err != nil {
+			fmt.Printf("Error starting proxy: %v\n", err)
+			return
 		}
 
-		fmt.Println("stopping proxy")
-		p.Stop()
-	} else {
-		fmt.Println(args)
+		if args["docker"] == true {
+			CallDocker(args["COMMAND"].([]string), []string{"DOCKER_HOST=unix://" + socketPath})
+		} else {
+			fmt.Println("Started proxy at unix://" + socketPath)
+
+			c := make(chan os.Signal)
+			signal.Notify(c, syscall.SIGINT, syscall.SIGKILL)
+			<-c
+
+			fmt.Println("\nStopping proxy")
+		}
 	}
 }
 
