@@ -8,6 +8,7 @@ import "github.com/orchardup/orchard/proxy"
 import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
 
 import "net"
+import "crypto/tls"
 import "os/exec"
 import "os/signal"
 import "syscall"
@@ -39,10 +40,12 @@ Options:
 	} else if args["docker"] == true || args["proxy"] == true {
 		socketPath := "/tmp/orchard.sock"
 
-		p := proxy.New(
-			func() (net.Listener, error) { return net.Listen("unix", socketPath) },
-			func() (net.Conn, error) { return net.Dial("tcp", "localdocker:4243") },
-		)
+		p, err := MakeProxy(socketPath, "default")
+		if err != nil {
+			fmt.Printf("Error starting proxy: %v\n", err)
+			return
+		}
+
 		go p.Start()
 		defer p.Stop()
 
@@ -63,6 +66,23 @@ Options:
 			fmt.Println("\nStopping proxy")
 		}
 	}
+}
+
+func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
+	httpClient, err := authenticator.Authenticate()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := httpClient.GetHost(hostName)
+	if err != nil {
+		return nil, err
+	}
+
+	return proxy.New(
+		func() (net.Listener, error) { return net.Listen("unix", socketPath) },
+		func() (net.Conn, error) { return tls.Dial("tcp", host.IPv4_Address+":443", nil) },
+	), nil
 }
 
 func CallDocker(args []string, env []string) error {

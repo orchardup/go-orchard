@@ -55,6 +55,18 @@ func (client *HTTPClient) GetHosts() ([]Host, error) {
 	return hosts, nil
 }
 
+func (client *HTTPClient) GetHost(name string) (*Host, error) {
+	req, err := http.NewRequest("GET", client.BaseURL+"/hosts/"+name, nil)
+	if err != nil {
+		return nil, err
+	}
+	var host Host
+	if err := client.DoRequest(req, &host); err != nil {
+		return nil, err
+	}
+	return &host, nil
+}
+
 func (client *HTTPClient) CreateHost(name string) (Host, error) {
 	var host Host
 
