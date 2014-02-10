@@ -40,14 +40,17 @@ Options:
 		return
 	}
 
+	var cmdErr error = nil
+
 	if args["hosts"] == true {
-		if err := Hosts(args); err != nil {
-			fmt.Println(err)
-		}
+		cmdErr = Hosts(args)
 	} else if args["docker"] == true || args["proxy"] == true {
-		if err := Docker(args); err != nil {
-			fmt.Println(err)
-		}
+		cmdErr = Docker(args)
+	}
+
+	if cmdErr != nil {
+		fmt.Fprintln(os.Stderr, cmdErr)
+		os.Exit(1)
 	}
 }
 
@@ -79,7 +82,7 @@ func Docker(args map[string]interface{}) error {
 	if args["docker"] == true {
 		err := CallDocker(args["COMMAND"].([]string), []string{"DOCKER_HOST=unix://" + socketPath})
 		if err != nil {
-			fmt.Println(err)
+			return fmt.Errorf("Docker exited with error")
 		}
 	} else {
 		fmt.Println("Started proxy at unix://" + socketPath)
