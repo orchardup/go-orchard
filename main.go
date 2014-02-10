@@ -26,12 +26,13 @@ Usage:
   orchard hosts
   orchard hosts create NAME
   orchard hosts rm NAME
-  orchard docker [COMMAND...]
-  orchard proxy
+  orchard [options] docker [COMMAND...]
+  orchard [options] proxy
 
 Options:
-  -h --help   Show this screen.
-  --version   Show version.`
+  -h --help               Show this screen.
+  --version               Show version.
+  -H NAME, --host=NAME    Name of host to connect to (instead of 'default')`
 
 	args, err := docopt.Parse(usage, nil, true, "Orchard 2.0.0", true)
 	if err != nil {
@@ -44,9 +45,14 @@ Options:
 			fmt.Println(err)
 		}
 	} else if args["docker"] == true || args["proxy"] == true {
+		hostName := "default"
+		if args["--host"] != nil {
+			hostName = args["--host"].(string)
+		}
+
 		socketPath := "/tmp/orchard.sock"
 
-		p, err := MakeProxy(socketPath, "default")
+		p, err := MakeProxy(socketPath, hostName)
 		if err != nil {
 			fmt.Printf("Error starting proxy: %v\n", err)
 			return
@@ -78,18 +84,19 @@ Options:
 }
 
 func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
-	// httpClient, err := authenticator.Authenticate()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	httpClient, err := authenticator.Authenticate()
+	if err != nil {
+		return nil, err
+	}
 
-	// host, err := httpClient.GetHost(hostName)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// destination := host.IPv4_Address+":443"
+	host, err := httpClient.GetHost(hostName)
+	if err != nil {
+		return nil, err
+	}
+	destination := host.IPv4_Address + ":4243"
 
-	destination := "107.170.41.173:4243"
+	fmt.Printf("Connecting to %s...\n", destination)
+
 	certData, err := ioutil.ReadFile("client-cert.pem")
 	if err != nil {
 		return nil, err
