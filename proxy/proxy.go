@@ -52,7 +52,6 @@ func (p *Proxy) ForwardConnection(clientConn net.Conn) {
 	serverConn, err := p.DialFunc()
 	if err != nil {
 		fmt.Println(err)
-		clientConn.Close()
 		return
 	}
 	defer serverConn.Close()
