@@ -2,6 +2,7 @@ package proxy
 
 import "net"
 import "io"
+import "fmt"
 
 type Proxy struct {
 	ErrorChannel chan error
@@ -50,7 +51,9 @@ func (p *Proxy) ForwardConnection(clientConn net.Conn) {
 	defer clientConn.Close()
 	serverConn, err := p.DialFunc()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		clientConn.Close()
+		return
 	}
 	defer serverConn.Close()
 	complete := make(chan bool)
