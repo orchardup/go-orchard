@@ -15,6 +15,8 @@ type Host struct {
 	Name         string
 	URL          string
 	IPv4_Address string
+	Client_Key   string
+	Client_Cert  string
 }
 
 type HTTPClient struct {

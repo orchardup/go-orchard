@@ -111,15 +111,8 @@ func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
 
 	fmt.Printf("Connecting to %s...\n", destination)
 
-	certData, err := ioutil.ReadFile("client-cert.pem")
-	if err != nil {
-		return nil, err
-	}
-	keyData, err := ioutil.ReadFile("client-key.pem")
-	if err != nil {
-		return nil, err
-	}
-
+	certData := []byte(host.Client_Cert)
+	keyData := []byte(host.Client_Key)
 	config, err := tlsconfig.GetTLSConfig(certData, keyData)
 	if err != nil {
 		return nil, err
