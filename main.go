@@ -12,6 +12,8 @@ import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
 
 import "net"
 import "crypto/tls"
+import "crypto/x509"
+import "io/ioutil"
 import "os/exec"
 import "os/signal"
 import "syscall"
@@ -75,19 +77,35 @@ Options:
 }
 
 func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
-	httpClient, err := authenticator.Authenticate()
+	// httpClient, err := authenticator.Authenticate()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// host, err := httpClient.GetHost(hostName)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// destination := host.IPv4_Address+":443"
+
+	destination := "107.170.41.173:4243"
+	certData, err := ioutil.ReadFile("client-cert.pem")
+	if err != nil {
+		return nil, err
+	}
+	keyData, err := ioutil.ReadFile("client-key.pem")
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := httpClient.GetHost(hostName)
+	config, err := GetTLSConfig(certData, keyData)
 	if err != nil {
 		return nil, err
 	}
 
 	return proxy.New(
 		func() (net.Listener, error) { return net.Listen("unix", socketPath) },
-		func() (net.Conn, error) { return tls.Dial("tcp", host.IPv4_Address+":443", nil) },
+		func() (net.Conn, error) { return tls.Dial("tcp", destination, config) },
 	), nil
 }
 
@@ -149,4 +167,27 @@ func Hosts(args map[string]interface{}) error {
 	}
 
 	return nil
+}
+
+func GetTLSConfig(clientCertPEMData, clientKeyPEMData []byte) (*tls.Config, error) {
+	pemData, err := ioutil.ReadFile("orchard-certs.pem")
+	if err != nil {
+		return nil, err
+	}
+	certPool := x509.NewCertPool()
+	certPool.AppendCertsFromPEM(pemData)
+
+	clientCert, err := tls.X509KeyPair(clientCertPEMData, clientKeyPEMData)
+	if err != nil {
+		return nil, err
+	}
+
+	config := new(tls.Config)
+	config.RootCAs = certPool
+	config.Certificates = []tls.Certificate{clientCert}
+	config.BuildNameToCertificate()
+
+	// config.InsecureSkipVerify = true
+
+	return config, nil
 }
