@@ -127,7 +127,7 @@ func Hosts(args map[string]interface{}) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Created %s\n", host.Name)
+		fmt.Printf("Created %s with IP address %s\n", host.Name, host.IPv4_Address)
 	} else if args["rm"] == true {
 		err := httpClient.DeleteHost(args["NAME"].(string))
 		if err != nil {
