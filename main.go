@@ -50,7 +50,13 @@ Options:
 			hostName = args["--host"].(string)
 		}
 
-		socketPath := "/tmp/orchard.sock"
+		dirname, err := ioutil.TempDir("/tmp", "orchard-")
+		if err != nil {
+			fmt.Printf("Error creating temporary directory: %s\n", err)
+			return
+		}
+		defer os.RemoveAll(dirname)
+		socketPath := path.Join(dirname, "orchard.sock")
 
 		p, err := MakeProxy(socketPath, hostName)
 		if err != nil {
