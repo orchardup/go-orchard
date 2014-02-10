@@ -45,48 +45,53 @@ Options:
 			fmt.Println(err)
 		}
 	} else if args["docker"] == true || args["proxy"] == true {
-		hostName := "default"
-		if args["--host"] != nil {
-			hostName = args["--host"].(string)
-		}
-
-		dirname, err := ioutil.TempDir("/tmp", "orchard-")
-		if err != nil {
-			fmt.Printf("Error creating temporary directory: %s\n", err)
-			return
-		}
-		defer os.RemoveAll(dirname)
-		socketPath := path.Join(dirname, "orchard.sock")
-
-		p, err := MakeProxy(socketPath, hostName)
-		if err != nil {
-			fmt.Printf("Error starting proxy: %v\n", err)
-			return
-		}
-
-		go p.Start()
-		defer p.Stop()
-
-		if err := <-p.ErrorChannel; err != nil {
-			fmt.Printf("Error starting proxy: %v\n", err)
-			return
-		}
-
-		if args["docker"] == true {
-			err := CallDocker(args["COMMAND"].([]string), []string{"DOCKER_HOST=unix://" + socketPath})
-			if err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			fmt.Println("Started proxy at unix://" + socketPath)
-
-			c := make(chan os.Signal)
-			signal.Notify(c, syscall.SIGINT, syscall.SIGKILL)
-			<-c
-
-			fmt.Println("\nStopping proxy")
+		if err := Docker(args); err != nil {
+			fmt.Println(err)
 		}
 	}
+}
+
+func Docker(args map[string]interface{}) error {
+	hostName := "default"
+	if args["--host"] != nil {
+		hostName = args["--host"].(string)
+	}
+
+	dirname, err := ioutil.TempDir("/tmp", "orchard-")
+	if err != nil {
+		return fmt.Errorf("Error creating temporary directory: %s\n", err)
+	}
+	defer os.RemoveAll(dirname)
+	socketPath := path.Join(dirname, "orchard.sock")
+
+	p, err := MakeProxy(socketPath, hostName)
+	if err != nil {
+		return fmt.Errorf("Error starting proxy: %v\n", err)
+	}
+
+	go p.Start()
+	defer p.Stop()
+
+	if err := <-p.ErrorChannel; err != nil {
+		return fmt.Errorf("Error starting proxy: %v\n", err)
+	}
+
+	if args["docker"] == true {
+		err := CallDocker(args["COMMAND"].([]string), []string{"DOCKER_HOST=unix://" + socketPath})
+		if err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		fmt.Println("Started proxy at unix://" + socketPath)
+
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGKILL)
+		<-c
+
+		fmt.Println("\nStopping proxy")
+	}
+
+	return nil
 }
 
 func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
