@@ -11,12 +11,12 @@ import (
 )
 
 type Host struct {
-	ID           string
-	Name         string
-	URL          string
-	IPv4_Address string
-	Client_Key   string
-	Client_Cert  string
+	ID         string
+	Name       string
+	URL        string
+	IPAddress  string `json:"ipv4_address"`
+	ClientKey  string `json:"client_key"`
+	ClientCert string `json:"client_cert"`
 }
 
 type HTTPClient struct {

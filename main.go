@@ -107,12 +107,12 @@ func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
 	if err != nil {
 		return nil, err
 	}
-	destination := host.IPv4_Address + ":4243"
+	destination := host.IPAddress + ":4243"
 
 	fmt.Printf("Connecting to %s...\n", destination)
 
-	certData := []byte(host.Client_Cert)
-	keyData := []byte(host.Client_Key)
+	certData := []byte(host.ClientCert)
+	keyData := []byte(host.ClientKey)
 	config, err := tlsconfig.GetTLSConfig(certData, keyData)
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func Hosts(args map[string]interface{}) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Created %s with IP address %s\n", host.Name, host.IPv4_Address)
+		fmt.Printf("Created %s with IP address %s\n", host.Name, host.IPAddress)
 	} else if args["rm"] == true {
 		err := httpClient.DeleteHost(args["NAME"].(string))
 		if err != nil {
@@ -176,7 +176,7 @@ func Hosts(args map[string]interface{}) error {
 		writer := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
 		fmt.Fprintln(writer, "NAME\tIP")
 		for _, host := range hosts {
-			fmt.Fprintf(writer, "%s\t%s\n", host.Name, host.IPv4_Address)
+			fmt.Fprintf(writer, "%s\t%s\n", host.Name, host.IPAddress)
 		}
 		writer.Flush()
 	}
