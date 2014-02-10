@@ -41,17 +41,16 @@ func (client *HTTPClient) GetAuthToken(username string, password string) (string
 	return authResponse.Token, nil
 }
 
-func (client *HTTPClient) GetHosts() ([]Host, error) {
-	var hosts []Host
-
+func (client *HTTPClient) GetHosts() ([]*Host, error) {
 	req, err := http.NewRequest("GET", client.BaseURL+"/hosts", nil)
 	if err != nil {
-		return []Host{}, err
-	}
-	if err := client.DoRequest(req, &hosts); err != nil {
-		return []Host{}, err
+		return nil, err
 	}
 
+	var hosts []*Host
+	if err := client.DoRequest(req, &hosts); err != nil {
+		return nil, err
+	}
 	return hosts, nil
 }
 
@@ -67,25 +66,24 @@ func (client *HTTPClient) GetHost(name string) (*Host, error) {
 	return &host, nil
 }
 
-func (client *HTTPClient) CreateHost(name string) (Host, error) {
-	var host Host
-
+func (client *HTTPClient) CreateHost(name string) (*Host, error) {
 	v := make(map[string]string)
 	v["name"] = name
 	body, err := json.Marshal(v)
 	if err != nil {
-		return Host{}, err
+		return nil, err
 	}
 
 	req, err := http.NewRequest("POST", client.BaseURL+"/hosts", bytes.NewReader(body))
 	if err != nil {
-		return Host{}, err
-	}
-	if err := client.DoRequest(req, &host); err != nil {
-		return Host{}, err
+		return nil, err
 	}
 
-	return host, nil
+	var host Host
+	if err := client.DoRequest(req, &host); err != nil {
+		return nil, err
+	}
+	return &host, nil
 }
 
 func (client *HTTPClient) DeleteHost(name string) error {
