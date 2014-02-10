@@ -187,7 +187,5 @@ func GetTLSConfig(clientCertPEMData, clientKeyPEMData []byte) (*tls.Config, erro
 	config.Certificates = []tls.Certificate{clientCert}
 	config.BuildNameToCertificate()
 
-	// config.InsecureSkipVerify = true
-
 	return config, nil
 }
