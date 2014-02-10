@@ -2,6 +2,9 @@ package main
 
 import "fmt"
 import "os"
+import "path"
+import "strings"
+import "errors"
 import "text/tabwriter"
 import "github.com/orchardup/orchard/cli"
 import "github.com/orchardup/orchard/proxy"
@@ -55,7 +58,10 @@ Options:
 		}
 
 		if args["docker"] == true {
-			CallDocker(args["COMMAND"].([]string), []string{"DOCKER_HOST=unix://" + socketPath})
+			err := CallDocker(args["COMMAND"].([]string), []string{"DOCKER_HOST=unix://" + socketPath})
+			if err != nil {
+				fmt.Println(err)
+			}
 		} else {
 			fmt.Println("Started proxy at unix://" + socketPath)
 
@@ -86,13 +92,28 @@ func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
 }
 
 func CallDocker(args []string, env []string) error {
-	// TODO: handle case where docker isn't installed
-	cmd := exec.Command("/usr/local/bin/docker", args...)
+	dockerPath := GetDockerPath()
+	if dockerPath == "" {
+		return errors.New("Can't find `docker` executable in $PATH.\nYou might need to install it: http://docs.docker.io/en/latest/installation/#installation-list")
+	}
+
+	cmd := exec.Command(dockerPath, args...)
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func GetDockerPath() string {
+	for _, dir := range strings.Split(os.Getenv("PATH"), ":") {
+		dockerPath := path.Join(dir, "docker")
+		_, err := os.Stat(dockerPath)
+		if err == nil {
+			return dockerPath
+		}
+	}
+	return ""
 }
 
 func Hosts(args map[string]interface{}) error {
