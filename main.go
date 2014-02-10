@@ -7,12 +7,12 @@ import "strings"
 import "errors"
 import "text/tabwriter"
 import "github.com/orchardup/orchard/cli"
+import "github.com/orchardup/orchard/tlsconfig"
 import "github.com/orchardup/orchard/proxy"
 import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
 
 import "net"
 import "crypto/tls"
-import "crypto/x509"
 import "io/ioutil"
 import "os/exec"
 import "os/signal"
@@ -98,7 +98,7 @@ func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
 		return nil, err
 	}
 
-	config, err := GetTLSConfig(certData, keyData)
+	config, err := tlsconfig.GetTLSConfig(certData, keyData)
 	if err != nil {
 		return nil, err
 	}
@@ -167,25 +167,4 @@ func Hosts(args map[string]interface{}) error {
 	}
 
 	return nil
-}
-
-func GetTLSConfig(clientCertPEMData, clientKeyPEMData []byte) (*tls.Config, error) {
-	pemData, err := ioutil.ReadFile("orchard-certs.pem")
-	if err != nil {
-		return nil, err
-	}
-	certPool := x509.NewCertPool()
-	certPool.AppendCertsFromPEM(pemData)
-
-	clientCert, err := tls.X509KeyPair(clientCertPEMData, clientKeyPEMData)
-	if err != nil {
-		return nil, err
-	}
-
-	config := new(tls.Config)
-	config.RootCAs = certPool
-	config.Certificates = []tls.Certificate{clientCert}
-	config.BuildNameToCertificate()
-
-	return config, nil
 }
