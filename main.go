@@ -1,22 +1,23 @@
 package main
 
-import "fmt"
-import "os"
-import "path"
-import "strings"
-import "errors"
-import "text/tabwriter"
-import "github.com/orchardup/orchard/cli"
-import "github.com/orchardup/orchard/tlsconfig"
-import "github.com/orchardup/orchard/proxy"
-import "github.com/orchardup/orchard/github.com/docopt/docopt.go"
-
-import "net"
-import "crypto/tls"
-import "io/ioutil"
-import "os/exec"
-import "os/signal"
-import "syscall"
+import (
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"github.com/orchardup/orchard/cli"
+	"github.com/orchardup/orchard/github.com/docopt/docopt.go"
+	"github.com/orchardup/orchard/proxy"
+	"github.com/orchardup/orchard/tlsconfig"
+	"io/ioutil"
+	"net"
+	"os"
+	"os/exec"
+	"os/signal"
+	"path"
+	"strings"
+	"syscall"
+	"text/tabwriter"
+)
 
 func main() {
 	usage := `Orchard.

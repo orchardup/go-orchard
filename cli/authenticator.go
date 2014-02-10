@@ -1,13 +1,15 @@
 package authenticator
 
-import "fmt"
-import "os"
-import "path"
-import "io"
-import "io/ioutil"
-import "crypto/md5"
-import "github.com/orchardup/orchard/api"
-import "github.com/orchardup/orchard/code.google.com/p/gopass"
+import (
+	"crypto/md5"
+	"fmt"
+	"github.com/orchardup/orchard/api"
+	"github.com/orchardup/orchard/code.google.com/p/gopass"
+	"io"
+	"io/ioutil"
+	"os"
+	"path"
+)
 
 func Authenticate() (*api.HTTPClient, error) {
 	httpClient := api.HTTPClient{GetAPIURL(), ""}

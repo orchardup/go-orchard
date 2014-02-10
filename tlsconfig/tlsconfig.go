@@ -1,7 +1,9 @@
 package tlsconfig
 
-import "crypto/tls"
-import "crypto/x509"
+import (
+	"crypto/tls"
+	"crypto/x509"
+)
 
 func GetTLSConfig(clientCertPEMData, clientKeyPEMData []byte) (*tls.Config, error) {
 	certPool := x509.NewCertPool()

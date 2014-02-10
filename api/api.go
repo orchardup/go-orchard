@@ -1,12 +1,14 @@
 package api
 
-import "fmt"
-import "errors"
-import "bytes"
-import "io/ioutil"
-import "net/url"
-import "net/http"
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+)
 
 type Host struct {
 	ID           string

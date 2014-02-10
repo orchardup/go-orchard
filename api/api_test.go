@@ -1,11 +1,13 @@
 package api
 
-import "testing"
-import "fmt"
-import "encoding/json"
-import "io/ioutil"
-import "net/http"
-import "net/http/httptest"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
 
 func TestGetHosts(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

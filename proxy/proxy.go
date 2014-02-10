@@ -1,8 +1,10 @@
 package proxy
 
-import "net"
-import "io"
-import "fmt"
+import (
+	"fmt"
+	"io"
+	"net"
+)
 
 type Proxy struct {
 	ErrorChannel chan error
