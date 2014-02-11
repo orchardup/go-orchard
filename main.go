@@ -109,8 +109,6 @@ func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
 	}
 	destination := host.IPAddress + ":4243"
 
-	fmt.Printf("Connecting to %s...\n", destination)
-
 	certData := []byte(host.ClientCert)
 	keyData := []byte(host.ClientKey)
 	config, err := tlsconfig.GetTLSConfig(certData, keyData)
