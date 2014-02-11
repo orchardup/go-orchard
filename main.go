@@ -36,7 +36,7 @@ Options:
 
 	args, err := docopt.Parse(usage, nil, true, "Orchard 2.0.0", true)
 	if err != nil {
-		fmt.Println("Error parsing arguments: %s\n", err)
+		fmt.Fprintln(os.Stderr, "Error parsing arguments: %s\n", err)
 		return
 	}
 
@@ -85,13 +85,13 @@ func Docker(args map[string]interface{}) error {
 			return fmt.Errorf("Docker exited with error")
 		}
 	} else {
-		fmt.Println("Started proxy at unix://" + socketPath)
+		fmt.Fprintln(os.Stderr, "Started proxy at unix://"+socketPath)
 
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGKILL)
 		<-c
 
-		fmt.Println("\nStopping proxy")
+		fmt.Fprintln(os.Stderr, "\nStopping proxy")
 	}
 
 	return nil
@@ -150,7 +150,7 @@ func GetDockerPath() string {
 func Hosts(args map[string]interface{}) error {
 	httpClient, err := authenticator.Authenticate()
 	if err != nil {
-		fmt.Printf("Error authenticating:\n%s\n", err)
+		fmt.Fprintf(os.Stderr, "Error authenticating:\n%s\n", err)
 	}
 
 	if args["create"] == true {
@@ -158,13 +158,13 @@ func Hosts(args map[string]interface{}) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Created %s with IP address %s\n", host.Name, host.IPAddress)
+		fmt.Fprintf(os.Stderr, "Created %s with IP address %s\n", host.Name, host.IPAddress)
 	} else if args["rm"] == true {
 		err := httpClient.DeleteHost(args["NAME"].(string))
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Removed %s\n", args["NAME"].(string))
+		fmt.Fprintf(os.Stderr, "Removed %s\n", args["NAME"].(string))
 	} else {
 		hosts, err := httpClient.GetHosts()
 		if err != nil {

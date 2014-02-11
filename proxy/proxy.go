@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 )
 
 type Proxy struct {
@@ -53,7 +54,7 @@ func (p *Proxy) ForwardConnection(clientConn net.Conn) {
 	defer clientConn.Close()
 	serverConn, err := p.DialFunc()
 	if err != nil {
-		fmt.Printf("error connecting upstream: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error connecting upstream: %s\n", err)
 		return
 	}
 	defer serverConn.Close()
