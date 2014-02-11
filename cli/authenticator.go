@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/orchardup/orchard/api"
-	"github.com/orchardup/orchard/code.google.com/p/gopass"
+	"github.com/orchardup/orchard/vendor/code.google.com/p/gopass"
 	"io"
 	"io/ioutil"
 	"os"
