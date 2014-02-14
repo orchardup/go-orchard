@@ -24,8 +24,8 @@ func main() {
 
 Usage:
   orchard hosts
-  orchard hosts create NAME
-  orchard hosts rm NAME
+  orchard start [NAME]
+  orchard stop [NAME]
   orchard [options] docker [COMMAND...]
   orchard [options] proxy
 
@@ -44,6 +44,10 @@ Options:
 
 	if args["hosts"] == true {
 		cmdErr = Hosts(args)
+	} else if args["start"] == true {
+		cmdErr = Start(args)
+	} else if args["stop"] == true {
+		cmdErr = Stop(args)
 	} else if args["docker"] == true || args["proxy"] == true {
 		cmdErr = Docker(args)
 	}
@@ -147,37 +151,79 @@ func GetDockerPath() string {
 	return ""
 }
 
+func Start(args map[string]interface{}) error {
+	httpClient, err := authenticator.Authenticate()
+	if err != nil {
+		return err
+	}
+
+	hostName, humanName := GetHostName(args)
+	humanName = strings.ToUpper(humanName[0:1]) + humanName[1:]
+
+	host, err := httpClient.CreateHost(hostName)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "%s running at %s\n", humanName, host.IPAddress)
+
+	return nil
+}
+
+func Stop(args map[string]interface{}) error {
+	hostName, humanName := GetHostName(args)
+
+	var confirm string
+	fmt.Printf("Going to stop and delete %s. All data on it will be lost.\n", humanName)
+	fmt.Print("Are you sure you're ready? [yN] ")
+	fmt.Scanln(&confirm)
+
+	if strings.ToLower(confirm) != "y" {
+		return nil
+	}
+
+	httpClient, err := authenticator.Authenticate()
+	if err != nil {
+		return err
+	}
+
+	err = httpClient.DeleteHost(hostName)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "Stopped %s\n", humanName)
+
+	return nil
+}
+
+func GetHostName(args map[string]interface{}) (string, string) {
+	hostName := "default"
+	humanName := "default host"
+
+	if args["NAME"] != nil {
+		hostName = args["NAME"].(string)
+		humanName = fmt.Sprintf("host '%s'", hostName)
+	}
+
+	return hostName, humanName
+}
+
 func Hosts(args map[string]interface{}) error {
 	httpClient, err := authenticator.Authenticate()
 	if err != nil {
 		return err
 	}
 
-	if args["create"] == true {
-		host, err := httpClient.CreateHost(args["NAME"].(string))
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(os.Stderr, "Created %s with IP address %s\n", host.Name, host.IPAddress)
-	} else if args["rm"] == true {
-		err := httpClient.DeleteHost(args["NAME"].(string))
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(os.Stderr, "Removed %s\n", args["NAME"].(string))
-	} else {
-		hosts, err := httpClient.GetHosts()
-		if err != nil {
-			return err
-		}
-
-		writer := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
-		fmt.Fprintln(writer, "NAME\tIP")
-		for _, host := range hosts {
-			fmt.Fprintf(writer, "%s\t%s\n", host.Name, host.IPAddress)
-		}
-		writer.Flush()
+	hosts, err := httpClient.GetHosts()
+	if err != nil {
+		return err
 	}
+
+	writer := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
+	fmt.Fprintln(writer, "NAME\tIP")
+	for _, host := range hosts {
+		fmt.Fprintf(writer, "%s\t%s\n", host.Name, host.IPAddress)
+	}
+	writer.Flush()
 
 	return nil
 }
