@@ -162,6 +162,12 @@ func Start(args map[string]interface{}) error {
 
 	host, err := httpClient.CreateHost(hostName)
 	if err != nil {
+		// HACK. api.go should decode JSON and return a specific type of error for this case.
+		if strings.Contains(err.Error(), "already exists") {
+			fmt.Fprintf(os.Stderr, "%s is already running.\nYou can create additional hosts with `orchard start NAME`.\n", humanName)
+			return nil
+		}
+
 		return err
 	}
 	fmt.Fprintf(os.Stderr, "%s running at %s\n", humanName, host.IPAddress)
