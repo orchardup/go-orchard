@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"github.com/orchardup/orchard/api"
 	"github.com/orchardup/orchard/vendor/code.google.com/p/gopass"
@@ -33,6 +34,13 @@ func Authenticate() (*api.HTTPClient, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if token[0] == "{"[0] {
+			var tokenJSON map[string]interface{}
+			json.Unmarshal(token, &tokenJSON)
+			token = []byte(tokenJSON["token"].(string))
+		}
+
 		httpClient.Token = string(token)
 	}
 
