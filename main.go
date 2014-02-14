@@ -158,7 +158,7 @@ func Start(args map[string]interface{}) error {
 	}
 
 	hostName, humanName := GetHostName(args)
-	humanName = strings.ToUpper(humanName[0:1]) + humanName[1:]
+	humanName = Capitalize(humanName)
 
 	host, err := httpClient.CreateHost(hostName)
 	if err != nil {
@@ -215,6 +215,10 @@ func GetHostName(args map[string]interface{}) (string, string) {
 	}
 
 	return hostName, humanName
+}
+
+func Capitalize(str string) string {
+	return strings.ToUpper(str[0:1]) + str[1:]
 }
 
 func Hosts(args map[string]interface{}) error {
