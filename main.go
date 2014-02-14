@@ -167,6 +167,10 @@ func Start(args map[string]interface{}) error {
 			fmt.Fprintf(os.Stderr, "%s is already running.\nYou can create additional hosts with `orchard start NAME`.\n", humanName)
 			return nil
 		}
+		if strings.Contains(err.Error(), "Invalid value") {
+			fmt.Fprintf(os.Stderr, "Sorry, '%s' isn't a valid host name.\nHost names can only contain lowercase letters, numbers and underscores.\n", hostName)
+			return nil
+		}
 
 		return err
 	}
