@@ -150,7 +150,7 @@ func GetDockerPath() string {
 func Hosts(args map[string]interface{}) error {
 	httpClient, err := authenticator.Authenticate()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error authenticating:\n%s\n", err)
+		return err
 	}
 
 	if args["create"] == true {
