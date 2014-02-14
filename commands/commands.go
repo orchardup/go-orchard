@@ -66,13 +66,19 @@ var Hosts = &Command{
 }
 
 var Start = &Command{
-	UsageLine: "start [NAME]",
+	UsageLine: "start [-m MEMORY] [NAME]",
 	Short:     "Start a host",
-	Long: `Start a host.
+	Long: fmt.Sprintf(`Start a host.
 
 You can optionally specify a name for the host - if not, it will be
-named 'default', and 'orchard docker' commands will use it automatically.`,
+named 'default', and 'orchard docker' commands will use it automatically.
+
+You can also specify how much RAM the host should have with -m.
+Valid amounts are %s.`, validSizes),
 }
+
+var flStartSize = Start.Flag.String("m", "512M", "")
+var validSizes = "512M, 1G, 2G, 4G and 8G"
 
 var Stop = &Command{
 	UsageLine: "stop [NAME]",
@@ -145,7 +151,13 @@ func RunStart(cmd *Command, args []string) error {
 	hostName, humanName := GetHostName(args)
 	humanName = utils.Capitalize(humanName)
 
-	host, err := httpClient.CreateHost(hostName)
+	size, sizeString := GetHostSize()
+	if size == -1 {
+		fmt.Fprintf(os.Stderr, "Sorry, %q isn't a size we support.\nValid sizes are %s.\n", sizeString, validSizes)
+		return nil
+	}
+
+	host, err := httpClient.CreateHost(hostName, size)
 	if err != nil {
 		// HACK. api.go should decode JSON and return a specific type of error for this case.
 		if strings.Contains(err.Error(), "already exists") {
@@ -311,4 +323,20 @@ func GetHostName(args []string) (string, string) {
 	}
 
 	return hostName, humanName
+}
+
+func GetHostSize() (int, string) {
+	sizeString := *flStartSize
+
+	bytes, err := utils.RAMInBytes(sizeString)
+	if err != nil {
+		return -1, sizeString
+	}
+
+	megs := bytes / (1024 * 1024)
+	if megs < 1 {
+		return -1, sizeString
+	}
+
+	return int(megs), sizeString
 }

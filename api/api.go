@@ -69,9 +69,10 @@ func (client *HTTPClient) GetHost(name string) (*Host, error) {
 	return &host, nil
 }
 
-func (client *HTTPClient) CreateHost(name string) (*Host, error) {
-	v := make(map[string]string)
+func (client *HTTPClient) CreateHost(name string, ramInMB int) (*Host, error) {
+	v := make(map[string]interface{})
 	v["name"] = name
+	v["size"] = ramInMB
 	body, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
