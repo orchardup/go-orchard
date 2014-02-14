@@ -198,6 +198,12 @@ func Stop(args map[string]interface{}) error {
 
 	err = httpClient.DeleteHost(hostName)
 	if err != nil {
+		// HACK. api.go should decode JSON and return a specific type of error for this case.
+		if strings.Contains(err.Error(), "Not found") {
+			fmt.Fprintf(os.Stderr, "%s doesn't seem to be running.\nYou can view your running hosts with `orchard hosts`.\n", Capitalize(humanName))
+			return nil
+		}
+
 		return err
 	}
 	fmt.Fprintf(os.Stderr, "Stopped %s\n", humanName)
