@@ -7,6 +7,7 @@ import (
 	"github.com/orchardup/orchard/cli"
 	"github.com/orchardup/orchard/proxy"
 	"github.com/orchardup/orchard/tlsconfig"
+	"github.com/orchardup/orchard/utils"
 	"github.com/orchardup/orchard/vendor/github.com/docopt/docopt.go"
 	"io/ioutil"
 	"net"
@@ -158,7 +159,7 @@ func Start(args map[string]interface{}) error {
 	}
 
 	hostName, humanName := GetHostName(args)
-	humanName = Capitalize(humanName)
+	humanName = utils.Capitalize(humanName)
 
 	host, err := httpClient.CreateHost(hostName)
 	if err != nil {
@@ -200,7 +201,7 @@ func Stop(args map[string]interface{}) error {
 	if err != nil {
 		// HACK. api.go should decode JSON and return a specific type of error for this case.
 		if strings.Contains(err.Error(), "Not found") {
-			fmt.Fprintf(os.Stderr, "%s doesn't seem to be running.\nYou can view your running hosts with `orchard hosts`.\n", Capitalize(humanName))
+			fmt.Fprintf(os.Stderr, "%s doesn't seem to be running.\nYou can view your running hosts with `orchard hosts`.\n", utils.Capitalize(humanName))
 			return nil
 		}
 
@@ -221,10 +222,6 @@ func GetHostName(args map[string]interface{}) (string, string) {
 	}
 
 	return hostName, humanName
-}
-
-func Capitalize(str string) string {
-	return strings.ToUpper(str[0:1]) + str[1:]
 }
 
 func Hosts(args map[string]interface{}) error {
