@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -123,7 +122,16 @@ func DecodeResponse(resp *http.Response, v interface{}) error {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return errors.New(fmt.Sprintf("erroneous API response: %s", body))
+		explanation := string(body)
+		var jsonError map[string]interface{}
+
+		if err := json.Unmarshal(body, &jsonError); err == nil {
+			if jsonError["detail"] != nil {
+				explanation = jsonError["detail"].(string)
+			}
+		}
+
+		return fmt.Errorf("The Orchard API returned an error: %s", explanation)
 	}
 
 	if v != nil {
