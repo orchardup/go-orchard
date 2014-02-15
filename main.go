@@ -50,7 +50,8 @@ Commands:
 {{range .}}
   {{.Name | printf "%-11s"}} {{.Short}}{{end}}
 
-Run 'orchard help command' for more information on a command.`
+Run 'orchard help command' for more information on a command.
+`
 
 var helpTemplate = `Usage: orchard {{.UsageLine}}
 
