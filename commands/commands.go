@@ -43,6 +43,13 @@ func (c *Command) Usage() {
 	os.Exit(2)
 }
 
+func (c *Command) UsageError(format string, args ...interface{}) error {
+	fmt.Fprintf(os.Stderr, format, args...)
+	fmt.Fprint(os.Stderr, "\n\n")
+	c.Usage()
+	return fmt.Errorf(format, args...)
+}
+
 var All = []*Command{
 	Hosts,
 	Start,
@@ -122,6 +129,10 @@ Prints out a URL to pass to the 'docker' command, e.g.
 var flProxyHost = Proxy.Flag.String("H", "", "")
 
 func RunHosts(cmd *Command, args []string) error {
+	if len(args) > 0 {
+		return cmd.UsageError("`orchard hosts` doesn't expect any arguments, but got: %s", strings.Join(args, " "))
+	}
+
 	httpClient, err := authenticator.Authenticate()
 	if err != nil {
 		return err
@@ -143,6 +154,10 @@ func RunHosts(cmd *Command, args []string) error {
 }
 
 func RunStart(cmd *Command, args []string) error {
+	if len(args) > 1 {
+		return cmd.UsageError("`orchard start` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+	}
+
 	httpClient, err := authenticator.Authenticate()
 	if err != nil {
 		return err
@@ -181,6 +196,10 @@ func RunStart(cmd *Command, args []string) error {
 }
 
 func RunStop(cmd *Command, args []string) error {
+	if len(args) > 1 {
+		return cmd.UsageError("`orchard stop` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+	}
+
 	hostName, humanName := GetHostName(args)
 
 	var confirm string
@@ -223,6 +242,10 @@ func RunDocker(cmd *Command, args []string) error {
 }
 
 func RunProxy(cmd *Command, args []string) error {
+	if len(args) > 0 {
+		return cmd.UsageError("`orchard proxy` doesn't expect any arguments, but got: %s", strings.Join(args, " "))
+	}
+
 	return WithDockerProxy(func(socketPath string) error {
 		fmt.Fprintln(os.Stderr, "Started proxy at unix://"+socketPath)
 
