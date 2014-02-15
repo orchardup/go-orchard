@@ -133,9 +133,9 @@ func RunHosts(cmd *Command, args []string) error {
 	}
 
 	writer := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
-	fmt.Fprintln(writer, "NAME\tIP")
+	fmt.Fprintln(writer, "NAME\tSIZE\tIP")
 	for _, host := range hosts {
-		fmt.Fprintf(writer, "%s\t%s\n", host.Name, host.IPAddress)
+		fmt.Fprintf(writer, "%s\t%s\t%s\n", host.Name, utils.HumanSize(host.Size*1024*1024), host.IPAddress)
 	}
 	writer.Flush()
 

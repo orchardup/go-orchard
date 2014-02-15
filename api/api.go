@@ -13,6 +13,7 @@ type Host struct {
 	ID         string
 	Name       string
 	URL        string
+	Size       int64
 	IPAddress  string `json:"ipv4_address"`
 	ClientKey  string `json:"client_key"`
 	ClientCert string `json:"client_cert"`
