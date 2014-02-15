@@ -168,6 +168,10 @@ func RunStart(cmd *Command, args []string) error {
 			fmt.Fprintf(os.Stderr, "Sorry, '%s' isn't a valid host name.\nHost names can only contain lowercase letters, numbers and underscores.\n", hostName)
 			return nil
 		}
+		if strings.Contains(err.Error(), "Unsupported size") {
+			fmt.Fprintf(os.Stderr, "Sorry, %q isn't a size we support.\nValid sizes are %s.\n", sizeString, validSizes)
+			return nil
+		}
 
 		return err
 	}
