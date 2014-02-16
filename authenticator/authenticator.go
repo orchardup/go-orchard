@@ -51,7 +51,7 @@ func GetAPIURL() string {
 	apiURL := os.Getenv("ORCHARD_API_URL")
 
 	if apiURL == "" {
-		apiURL = "https://orchardup.com/api/v1"
+		apiURL = "https://orchardup.com/api/v2"
 	}
 
 	return apiURL
