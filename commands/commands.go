@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -9,6 +8,7 @@ import (
 	"github.com/orchardup/orchard/proxy"
 	"github.com/orchardup/orchard/tlsconfig"
 	"github.com/orchardup/orchard/utils"
+	"github.com/orchardup/orchard/vendor/crypto/tls"
 	"io/ioutil"
 	"net"
 	"os"

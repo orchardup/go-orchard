@@ -1,8 +1,8 @@
 package tlsconfig
 
 import (
-	"crypto/tls"
 	"crypto/x509"
+	"github.com/orchardup/orchard/vendor/crypto/tls"
 )
 
 func GetTLSConfig(clientCertPEMData, clientKeyPEMData []byte) (*tls.Config, error) {
