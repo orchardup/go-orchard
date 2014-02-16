@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/orchardup/orchard/constants"
+	"github.com/orchardup/go-orchard/constants"
 	"io/ioutil"
 	"net/http"
 	"net/url"

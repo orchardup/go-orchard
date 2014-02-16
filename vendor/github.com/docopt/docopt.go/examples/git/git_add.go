@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/orchardup/orchard/github.com/docopt/docopt.go"
+	"github.com/orchardup/go-orchard/github.com/docopt/docopt.go"
 )
 
 func cmdAdd(argv []string) (err error) {

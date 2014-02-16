@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/orchardup/orchard/commands"
-	"github.com/orchardup/orchard/constants"
+	"github.com/orchardup/go-orchard/commands"
+	"github.com/orchardup/go-orchard/constants"
 	"io"
 	"os"
 	"strings"
