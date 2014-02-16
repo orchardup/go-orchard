@@ -71,10 +71,14 @@ func Copy(to net.Conn, from net.Conn, complete chan bool) {
 	complete <- true
 }
 
-func CloseWrite(rwc net.Conn) {
-	if tcpc, ok := rwc.(*net.TCPConn); ok {
-		tcpc.CloseWrite()
-	} else if unixc, ok := rwc.(*net.UnixConn); ok {
-		unixc.CloseWrite()
+func CloseWrite(conn net.Conn) {
+	cwConn, ok := conn.(interface {
+		CloseWrite() error
+	})
+
+	if ok {
+		cwConn.CloseWrite()
+	} else {
+		fmt.Fprintf(os.Stderr, "Connection doesn't implement CloseWrite()\n")
 	}
 }
