@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/orchardup/go-orchard/github.com/docopt/docopt.go"
+	"github.com/orchardup/go-orchard/vendor/github.com/docopt/docopt.go"
 )
 
 func main() {
