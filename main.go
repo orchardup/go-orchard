@@ -19,11 +19,6 @@ func main() {
 		usage()
 	}
 
-	if args[0] == "help" {
-		help(args[1:])
-		return
-	}
-
 	for _, cmd := range commands.All {
 		if cmd.Name() == args[0] {
 			cmd.Flag.Usage = func() { cmd.Usage() }
@@ -50,12 +45,7 @@ Commands:
 {{range .}}
   {{.Name | printf "%-11s"}} {{.Short}}{{end}}
 
-Run 'orchard help command' for more information on a command.
-`
-
-var helpTemplate = `Usage: orchard {{.UsageLine}}
-
-{{.Long | trim}}
+Run 'orchard COMMAND -h' for more information on a command.
 `
 
 func tmpl(w io.Writer, text string, data interface{}) {
@@ -72,26 +62,6 @@ func printUsage(w io.Writer) {
 }
 
 func usage() {
-	printUsage(os.Stderr)
-	os.Exit(2)
-}
-
-func help(args []string) {
-	if len(args) == 0 {
-		printUsage(os.Stdout)
-		return
-	}
-
-	arg := args[0]
-
-	for _, cmd := range commands.All {
-		if cmd.Name() == arg {
-			tmpl(os.Stdout, helpTemplate, cmd)
-			return
-		}
-	}
-
-	fmt.Fprintf(os.Stderr, "Unknown help topic %#q.\n\n", arg)
 	printUsage(os.Stderr)
 	os.Exit(2)
 }
