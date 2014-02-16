@@ -38,41 +38,54 @@ func (c *Command) Name() string {
 }
 
 func (c *Command) Usage() {
-	fmt.Fprintf(os.Stderr, "Usage: orchard %s\n\n", c.UsageLine)
+	fmt.Fprintf(os.Stderr, "Usage: %s\n\n", c.UsageLine)
 	fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(c.Long))
 	os.Exit(2)
 }
 
 func (c *Command) UsageError(format string, args ...interface{}) error {
 	fmt.Fprintf(os.Stderr, format, args...)
-	fmt.Fprintf(os.Stderr, "\nUsage: orchard %s\n", c.UsageLine)
+	fmt.Fprintf(os.Stderr, "\nUsage: %s\n", c.UsageLine)
 	os.Exit(2)
 	return fmt.Errorf(format, args...)
 }
 
 var All = []*Command{
 	Hosts,
-	Start,
-	Stop,
 	Docker,
 	Proxy,
 }
 
+var HostSubcommands = []*Command{
+	StartHost,
+	StopHost,
+}
+
 func init() {
 	Hosts.Run = RunHosts
-	Start.Run = RunStart
-	Stop.Run = RunStop
+	StartHost.Run = RunStartHost
+	StopHost.Run = RunStopHost
 	Docker.Run = RunDocker
 	Proxy.Run = RunProxy
 }
 
 var Hosts = &Command{
 	UsageLine: "hosts",
-	Short:     "List all hosts",
-	Long:      "List all hosts",
+	Short:     "Manage hosts",
+	Long: `Manage hosts.
+
+Usage: orchard hosts [COMMAND] [ARGS...]
+
+Commands:
+  ls          List hosts (default)
+  start       Start a host
+  stop        Stop a host
+
+Run 'orchard hosts COMMAND -h' for more information on a command.
+`,
 }
 
-var Start = &Command{
+var StartHost = &Command{
 	UsageLine: "start [-m MEMORY] [NAME]",
 	Short:     "Start a host",
 	Long: fmt.Sprintf(`Start a host.
@@ -84,10 +97,10 @@ You can also specify how much RAM the host should have with -m.
 Valid amounts are %s.`, validSizes),
 }
 
-var flStartSize = Start.Flag.String("m", "512M", "")
+var flStartSize = StartHost.Flag.String("m", "512M", "")
 var validSizes = "512M, 1G, 2G, 4G and 8G"
 
-var Stop = &Command{
+var StopHost = &Command{
 	UsageLine: "stop [NAME]",
 	Short:     "Stop a host",
 	Long: `Stop a host.
@@ -129,8 +142,20 @@ Prints out a URL to pass to the 'docker' command, e.g.
 var flProxyHost = Proxy.Flag.String("H", "", "")
 
 func RunHosts(cmd *Command, args []string) error {
-	if len(args) > 0 {
-		return cmd.UsageError("`orchard hosts` doesn't expect any arguments, but got: %s", strings.Join(args, " "))
+	list := len(args) == 0 || (len(args) == 1 && args[0] == "ls")
+
+	if !list {
+		for _, subcommand := range HostSubcommands {
+			if subcommand.Name() == args[0] {
+				subcommand.Flag.Usage = func() { subcommand.Usage() }
+				subcommand.Flag.Parse(args[1:])
+				args = subcommand.Flag.Args()
+				err := subcommand.Run(subcommand, args)
+				return err
+			}
+		}
+
+		return fmt.Errorf("Unknown `hosts` subcommand: %s", args[0])
 	}
 
 	httpClient, err := authenticator.Authenticate()
@@ -153,9 +178,9 @@ func RunHosts(cmd *Command, args []string) error {
 	return nil
 }
 
-func RunStart(cmd *Command, args []string) error {
+func RunStartHost(cmd *Command, args []string) error {
 	if len(args) > 1 {
-		return cmd.UsageError("`orchard start` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+		return cmd.UsageError("`orchard hosts start` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
 	}
 
 	httpClient, err := authenticator.Authenticate()
@@ -176,7 +201,7 @@ func RunStart(cmd *Command, args []string) error {
 	if err != nil {
 		// HACK. api.go should decode JSON and return a specific type of error for this case.
 		if strings.Contains(err.Error(), "already exists") {
-			fmt.Fprintf(os.Stderr, "%s is already running.\nYou can create additional hosts with `orchard start NAME`.\n", humanName)
+			fmt.Fprintf(os.Stderr, "%s is already running.\nYou can create additional hosts with `orchard hosts start NAME`.\n", humanName)
 			return nil
 		}
 		if strings.Contains(err.Error(), "Invalid value") {
@@ -195,9 +220,9 @@ func RunStart(cmd *Command, args []string) error {
 	return nil
 }
 
-func RunStop(cmd *Command, args []string) error {
+func RunStopHost(cmd *Command, args []string) error {
 	if len(args) > 1 {
-		return cmd.UsageError("`orchard stop` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+		return cmd.UsageError("`orchard hosts stop` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
 	}
 
 	hostName, humanName := GetHostName(args)
