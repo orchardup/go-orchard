@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/orchardup/orchard/constants"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -107,6 +108,7 @@ func (client *HTTPClient) DoRequest(req *http.Request, v interface{}) error {
 	cl := &http.Client{}
 	req.Header.Set("Authorization", "Token "+client.Token)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", fmt.Sprintf("orchard/%s", constants.Version))
 	resp, err := cl.Do(req)
 	if err != nil {
 		return err
