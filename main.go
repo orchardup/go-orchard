@@ -11,6 +11,11 @@ import (
 )
 
 func main() {
+	if os.Args[1] == "--version" {
+		fmt.Println("Orchard 2.0.0")
+		return
+	}
+
 	flag.Usage = usage
 	flag.Parse()
 
