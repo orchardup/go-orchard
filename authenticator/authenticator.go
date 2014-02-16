@@ -96,7 +96,7 @@ func Prompt() (string, string) {
 		username string
 		password string
 	)
-	fmt.Print("Username you signed up for Orchard with: ")
+	fmt.Print("Orchard username: ")
 	fmt.Scanln(&username)
 	password, _ = gopass.GetPass("Password: ")
 	return username, password
