@@ -45,8 +45,8 @@ func (c *Command) Usage() {
 
 func (c *Command) UsageError(format string, args ...interface{}) error {
 	fmt.Fprintf(os.Stderr, format, args...)
-	fmt.Fprint(os.Stderr, "\n\n")
-	c.Usage()
+	fmt.Fprintf(os.Stderr, "\nUsage: %s\n", c.UsageLine)
+	os.Exit(2)
 	return fmt.Errorf(format, args...)
 }
 
