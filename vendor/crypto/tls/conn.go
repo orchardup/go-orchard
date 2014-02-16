@@ -12,6 +12,7 @@ import (
 	"crypto/subtle"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -930,6 +931,32 @@ func (c *Conn) Close() error {
 	}
 
 	if err := c.conn.Close(); err != nil {
+		return err
+	}
+	return alertErr
+}
+
+// CloseWrite closes the connection for writing,
+// if the underying net.Conn supports it.
+// Otherwise, it returns an error.
+func (c *Conn) CloseWrite() error {
+	cwConn, ok := c.conn.(interface {
+		CloseWrite() error
+	})
+
+	if !ok {
+		return fmt.Errorf("Underlying connection doesn't implement CloseWrite()")
+	}
+
+	var alertErr error
+
+	c.handshakeMutex.Lock()
+	defer c.handshakeMutex.Unlock()
+	if c.handshakeComplete {
+		alertErr = c.sendAlert(alertCloseNotify)
+	}
+
+	if err := cwConn.CloseWrite(); err != nil {
 		return err
 	}
 	return alertErr
