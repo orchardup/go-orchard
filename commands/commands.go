@@ -57,14 +57,14 @@ var All = []*Command{
 }
 
 var HostSubcommands = []*Command{
-	StartHost,
-	StopHost,
+	CreateHost,
+	RemoveHost,
 }
 
 func init() {
 	Hosts.Run = RunHosts
-	StartHost.Run = RunStartHost
-	StopHost.Run = RunStopHost
+	CreateHost.Run = RunCreateHost
+	RemoveHost.Run = RunRemoveHost
 	Docker.Run = RunDocker
 	Proxy.Run = RunProxy
 }
@@ -78,17 +78,17 @@ Usage: orchard hosts [COMMAND] [ARGS...]
 
 Commands:
   ls          List hosts (default)
-  start       Start a host
-  stop        Stop a host
+  create      Create a host
+  rm          Remove a host
 
 Run 'orchard hosts COMMAND -h' for more information on a command.
 `,
 }
 
-var StartHost = &Command{
-	UsageLine: "start [-m MEMORY] [NAME]",
-	Short:     "Start a host",
-	Long: fmt.Sprintf(`Start a host.
+var CreateHost = &Command{
+	UsageLine: "create [-m MEMORY] [NAME]",
+	Short:     "Create a host",
+	Long: fmt.Sprintf(`Create a host.
 
 You can optionally specify a name for the host - if not, it will be
 named 'default', and 'orchard docker' commands will use it automatically.
@@ -97,16 +97,16 @@ You can also specify how much RAM the host should have with -m.
 Valid amounts are %s.`, validSizes),
 }
 
-var flStartSize = StartHost.Flag.String("m", "512M", "")
+var flCreateSize = CreateHost.Flag.String("m", "512M", "")
 var validSizes = "512M, 1G, 2G, 4G and 8G"
 
-var StopHost = &Command{
-	UsageLine: "stop [NAME]",
-	Short:     "Stop a host",
-	Long: `Stop a host.
+var RemoveHost = &Command{
+	UsageLine: "rm [NAME]",
+	Short:     "Remove a host",
+	Long: `Remove a host.
 
-You can optionally specify which host to stop - if you don't, the default
-host (named 'default') will be stopped.`,
+You can optionally specify which host to remove - if you don't, the default
+host (named 'default') will be removed.`,
 }
 
 var Docker = &Command{
@@ -178,9 +178,9 @@ func RunHosts(cmd *Command, args []string) error {
 	return nil
 }
 
-func RunStartHost(cmd *Command, args []string) error {
+func RunCreateHost(cmd *Command, args []string) error {
 	if len(args) > 1 {
-		return cmd.UsageError("`orchard hosts start` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+		return cmd.UsageError("`orchard hosts create` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
 	}
 
 	httpClient, err := authenticator.Authenticate()
@@ -201,7 +201,7 @@ func RunStartHost(cmd *Command, args []string) error {
 	if err != nil {
 		// HACK. api.go should decode JSON and return a specific type of error for this case.
 		if strings.Contains(err.Error(), "already exists") {
-			fmt.Fprintf(os.Stderr, "%s is already running.\nYou can create additional hosts with `orchard hosts start NAME`.\n", humanName)
+			fmt.Fprintf(os.Stderr, "%s is already running.\nYou can create additional hosts with `orchard hosts create [NAME]`.\n", humanName)
 			return nil
 		}
 		if strings.Contains(err.Error(), "Invalid value") {
@@ -220,15 +220,15 @@ func RunStartHost(cmd *Command, args []string) error {
 	return nil
 }
 
-func RunStopHost(cmd *Command, args []string) error {
+func RunRemoveHost(cmd *Command, args []string) error {
 	if len(args) > 1 {
-		return cmd.UsageError("`orchard hosts stop` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+		return cmd.UsageError("`orchard hosts rm` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
 	}
 
 	hostName, humanName := GetHostName(args)
 
 	var confirm string
-	fmt.Printf("Going to stop and delete %s. All data on it will be lost.\n", humanName)
+	fmt.Printf("Going to remove %s. All data on it will be lost.\n", humanName)
 	fmt.Print("Are you sure you're ready? [yN] ")
 	fmt.Scanln(&confirm)
 
@@ -251,7 +251,7 @@ func RunStopHost(cmd *Command, args []string) error {
 
 		return err
 	}
-	fmt.Fprintf(os.Stderr, "Stopped %s\n", humanName)
+	fmt.Fprintf(os.Stderr, "Removed %s\n", humanName)
 
 	return nil
 }
@@ -378,7 +378,7 @@ func GetHostName(args []string) (string, string) {
 }
 
 func GetHostSize() (int, string) {
-	sizeString := *flStartSize
+	sizeString := *flCreateSize
 
 	bytes, err := utils.RAMInBytes(sizeString)
 	if err != nil {
