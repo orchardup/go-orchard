@@ -50,11 +50,15 @@ func TestCreateHost(t *testing.T) {
 		}
 
 		body, _ := ioutil.ReadAll(r.Body)
-		var data map[string]string
+		var data map[string]interface{}
 		json.Unmarshal(body, &data)
 
 		if data["name"] != "newhost" {
 			t.Errorf("expected 'newhost', got '%s'", data["name"])
+		}
+
+		if int(data["size"].(float64)) != 512 {
+			t.Errorf("expected 512, got %#v", data["size"])
 		}
 
 		w.WriteHeader(201)
@@ -67,7 +71,7 @@ func TestCreateHost(t *testing.T) {
 
 	client := HTTPClient{ts.URL, "dummy_token"}
 
-	host, err := client.CreateHost("newhost")
+	host, err := client.CreateHost("newhost", 512)
 	if err != nil {
 		t.Error(err)
 	}
