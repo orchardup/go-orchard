@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.0.3 (2014-02-18)
+------------------
+
+- API token can be set with ORCHARD_API_TOKEN environment variable
+- `orchard proxy` can be given an explicit URL to listen on (either `tcp://` or `unix://`)
+
 2.0.2 (2014-02-18)
 ------------------
 
