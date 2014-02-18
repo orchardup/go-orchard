@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.0.4 (2014-02-18)
+------------------
+
+- `orchard hosts rm -f` can be used to bypass confirmation
+- Fix: `orchard proxy` wasn't picking up -H argument
+
 2.0.3 (2014-02-18)
 ------------------
 
