@@ -14,25 +14,32 @@ import (
 
 func Authenticate() (*api.HTTPClient, error) {
 	httpClient := api.HTTPClient{GetAPIURL(), ""}
-
-	tokenFile, err := GetTokenFilePath(httpClient.BaseURL)
+	err := PopulateToken(&httpClient)
 	if err != nil {
 		return nil, err
 	}
+	return &httpClient, nil
+}
+
+func PopulateToken(httpClient *api.HTTPClient) error {
+	tokenFile, err := GetTokenFilePath(httpClient.BaseURL)
+	if err != nil {
+		return err
+	}
 
 	if _, err := os.Stat(tokenFile); os.IsNotExist(err) {
-		token, err := GetTokenByPromptingUser(&httpClient)
+		token, err := GetTokenByPromptingUser(httpClient)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err := ioutil.WriteFile(tokenFile, []byte(token), 0644); err != nil {
-			return nil, err
+			return err
 		}
 		httpClient.Token = token
 	} else {
 		token, err := ioutil.ReadFile(tokenFile)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if token[0] == "{"[0] {
@@ -44,7 +51,7 @@ func Authenticate() (*api.HTTPClient, error) {
 		httpClient.Token = string(token)
 	}
 
-	return &httpClient, nil
+	return nil
 }
 
 func GetAPIURL() string {
