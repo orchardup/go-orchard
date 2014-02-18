@@ -125,17 +125,22 @@ will be used.`,
 var flDockerHost = Docker.Flag.String("H", "", "")
 
 var Proxy = &Command{
-	UsageLine: "proxy [-H HOST]",
+	UsageLine: "proxy [-H HOST] [LISTEN_URL]",
 	Short:     "Start a local proxy to a host's Docker daemon",
 	Long: `Start a local proxy to a host's Docker daemon.
 
-Prints out a URL to pass to the 'docker' command, e.g.
+By default, listens on a Unix socket at a random path, e.g.
 
     $ orchard proxy
     Started proxy at unix:///tmp/orchard-12345/orchard.sock
 
     $ docker -H unix:///tmp/orchard-12345/orchard.sock run ubuntu echo hello world
     hello world
+
+Instead, you can specify a URL to listen on, which can be a socket or TCP address:
+
+    $ orchard proxy unix:///path/to/socket
+    $ orchard proxy tcp://localhost:1234
 `,
 }
 
@@ -257,8 +262,8 @@ func RunRemoveHost(cmd *Command, args []string) error {
 }
 
 func RunDocker(cmd *Command, args []string) error {
-	return WithDockerProxy(func(socketPath string) error {
-		err := CallDocker(args, []string{"DOCKER_HOST=unix://" + socketPath})
+	return WithDockerProxy("", func(listenURL string) error {
+		err := CallDocker(args, []string{"DOCKER_HOST=" + listenURL})
 		if err != nil {
 			return fmt.Errorf("Docker exited with error")
 		}
@@ -267,12 +272,16 @@ func RunDocker(cmd *Command, args []string) error {
 }
 
 func RunProxy(cmd *Command, args []string) error {
-	if len(args) > 0 {
-		return cmd.UsageError("`orchard proxy` doesn't expect any arguments, but got: %s", strings.Join(args, " "))
+	specifiedURL := ""
+
+	if len(args) == 1 {
+		specifiedURL = args[0]
+	} else if len(args) > 1 {
+		return cmd.UsageError("`orchard proxy` expects at most 1 argument, but got: %s", strings.Join(args, " "))
 	}
 
-	return WithDockerProxy(func(socketPath string) error {
-		fmt.Fprintln(os.Stderr, "Started proxy at unix://"+socketPath)
+	return WithDockerProxy(specifiedURL, func(listenURL string) error {
+		fmt.Fprintf(os.Stderr, "Started proxy at %s\n", listenURL)
 
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGKILL)
@@ -283,20 +292,27 @@ func RunProxy(cmd *Command, args []string) error {
 	})
 }
 
-func WithDockerProxy(callback func(string) error) error {
+func WithDockerProxy(listenURL string, callback func(string) error) error {
 	hostName := "default"
 	if *flDockerHost != "" {
 		hostName = *flDockerHost
 	}
 
-	dirname, err := ioutil.TempDir("/tmp", "orchard-")
-	if err != nil {
-		return fmt.Errorf("Error creating temporary directory: %s\n", err)
+	if listenURL == "" {
+		dirname, err := ioutil.TempDir("/tmp", "orchard-")
+		if err != nil {
+			return fmt.Errorf("Error creating temporary directory: %s\n", err)
+		}
+		defer os.RemoveAll(dirname)
+		listenURL = fmt.Sprintf("unix://%s", path.Join(dirname, "orchard.sock"))
 	}
-	defer os.RemoveAll(dirname)
-	socketPath := path.Join(dirname, "orchard.sock")
 
-	p, err := MakeProxy(socketPath, hostName)
+	listenType, listenAddr, err := ListenArgs(listenURL)
+	if err != nil {
+		return err
+	}
+
+	p, err := MakeProxy(listenType, listenAddr, hostName)
 	if err != nil {
 		return fmt.Errorf("Error starting proxy: %v\n", err)
 	}
@@ -308,14 +324,29 @@ func WithDockerProxy(callback func(string) error) error {
 		return fmt.Errorf("Error starting proxy: %v\n", err)
 	}
 
-	if err := callback(socketPath); err != nil {
+	if err := callback(listenURL); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
+var validListenTypes = []string{"tcp", "tcp4", "tcp6", "unix", "unixpacket"}
+
+func ListenArgs(url string) (string, string, error) {
+	parts := strings.SplitN(url, "://", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("Invalid URL: %q", url)
+	}
+	for _, validType := range validListenTypes {
+		if parts[0] == validType {
+			return parts[0], parts[1], nil
+		}
+	}
+	return "", "", fmt.Errorf("Invalid URL type: %q", parts[0])
+}
+
+func MakeProxy(listenType, listenAddr string, hostName string) (*proxy.Proxy, error) {
 	httpClient, err := authenticator.Authenticate()
 	if err != nil {
 		return nil, err
@@ -341,7 +372,7 @@ func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
 	}
 
 	return proxy.New(
-		func() (net.Listener, error) { return net.Listen("unix", socketPath) },
+		func() (net.Listener, error) { return net.Listen(listenType, listenAddr) },
 		func() (net.Conn, error) { return tls.Dial("tcp", destination, config) },
 	), nil
 }
