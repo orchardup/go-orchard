@@ -269,7 +269,7 @@ func RunRemoveHost(cmd *Command, args []string) error {
 }
 
 func RunDocker(cmd *Command, args []string) error {
-	return WithDockerProxy("", func(listenURL string) error {
+	return WithDockerProxy("", *flDockerHost, func(listenURL string) error {
 		err := CallDocker(args, []string{"DOCKER_HOST=" + listenURL})
 		if err != nil {
 			return fmt.Errorf("Docker exited with error")
@@ -287,7 +287,7 @@ func RunProxy(cmd *Command, args []string) error {
 		return cmd.UsageError("`orchard proxy` expects at most 1 argument, but got: %s", strings.Join(args, " "))
 	}
 
-	return WithDockerProxy(specifiedURL, func(listenURL string) error {
+	return WithDockerProxy(specifiedURL, *flProxyHost, func(listenURL string) error {
 		fmt.Fprintf(os.Stderr, "Started proxy at %s\n", listenURL)
 
 		c := make(chan os.Signal)
@@ -299,10 +299,9 @@ func RunProxy(cmd *Command, args []string) error {
 	})
 }
 
-func WithDockerProxy(listenURL string, callback func(string) error) error {
-	hostName := "default"
-	if *flDockerHost != "" {
-		hostName = *flDockerHost
+func WithDockerProxy(listenURL, hostName string, callback func(string) error) error {
+	if hostName == "" {
+		hostName = "default"
 	}
 
 	if listenURL == "" {
