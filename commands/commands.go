@@ -101,13 +101,18 @@ var flCreateSize = CreateHost.Flag.String("m", "512M", "")
 var validSizes = "512M, 1G, 2G, 4G and 8G"
 
 var RemoveHost = &Command{
-	UsageLine: "rm [NAME]",
+	UsageLine: "rm [-f] [NAME]",
 	Short:     "Remove a host",
 	Long: `Remove a host.
 
 You can optionally specify which host to remove - if you don't, the default
-host (named 'default') will be removed.`,
+host (named 'default') will be removed.
+
+Set -f to bypass the confirmation step, at your peril.
+`,
 }
+
+var flRemoveHostForce = RemoveHost.Flag.Bool("f", false, "")
 
 var Docker = &Command{
 	UsageLine: "docker [-H HOST] [COMMAND...]",
@@ -232,13 +237,15 @@ func RunRemoveHost(cmd *Command, args []string) error {
 
 	hostName, humanName := GetHostName(args)
 
-	var confirm string
-	fmt.Printf("Going to remove %s. All data on it will be lost.\n", humanName)
-	fmt.Print("Are you sure you're ready? [yN] ")
-	fmt.Scanln(&confirm)
+	if !*flRemoveHostForce {
+		var confirm string
+		fmt.Printf("Going to remove %s. All data on it will be lost.\n", humanName)
+		fmt.Print("Are you sure you're ready? [yN] ")
+		fmt.Scanln(&confirm)
 
-	if strings.ToLower(confirm) != "y" {
-		return nil
+		if strings.ToLower(confirm) != "y" {
+			return nil
+		}
 	}
 
 	httpClient, err := authenticator.Authenticate()
