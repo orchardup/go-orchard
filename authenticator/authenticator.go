@@ -2,7 +2,6 @@ package authenticator
 
 import (
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"github.com/orchardup/go-orchard/api"
 	"github.com/orchardup/go-orchard/vendor/code.google.com/p/gopass"
@@ -40,12 +39,6 @@ func PopulateToken(httpClient *api.HTTPClient) error {
 		token, err := ioutil.ReadFile(tokenFile)
 		if err != nil {
 			return err
-		}
-
-		if token[0] == "{"[0] {
-			var tokenJSON map[string]interface{}
-			json.Unmarshal(token, &tokenJSON)
-			token = []byte(tokenJSON["token"].(string))
 		}
 
 		httpClient.Token = string(token)
