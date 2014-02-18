@@ -21,6 +21,12 @@ func Authenticate() (*api.HTTPClient, error) {
 }
 
 func PopulateToken(httpClient *api.HTTPClient) error {
+	envVar := os.Getenv("ORCHARD_API_TOKEN")
+	if envVar != "" {
+		httpClient.Token = envVar
+		return nil
+	}
+
 	tokenFile, err := GetTokenFilePath(httpClient.BaseURL)
 	if err != nil {
 		return err
