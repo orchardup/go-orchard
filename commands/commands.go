@@ -323,6 +323,12 @@ func MakeProxy(socketPath string, hostName string) (*proxy.Proxy, error) {
 
 	host, err := httpClient.GetHost(hostName)
 	if err != nil {
+		// HACK. api.go should decode JSON and return a specific type of error for this case.
+		if strings.Contains(err.Error(), "Not found") {
+			humanName := GetHumanHostName(hostName)
+			return nil, fmt.Errorf("%s doesn't seem to be running.\nYou can create it with `orchard hosts create %s`.", utils.Capitalize(humanName), hostName)
+		}
+
 		return nil, err
 	}
 	destination := host.IPAddress + ":4243"
@@ -367,14 +373,20 @@ func GetDockerPath() string {
 
 func GetHostName(args []string) (string, string) {
 	hostName := "default"
-	humanName := "default host"
 
 	if len(args) > 0 {
 		hostName = args[0]
-		humanName = fmt.Sprintf("host '%s'", hostName)
 	}
 
-	return hostName, humanName
+	return hostName, GetHumanHostName(hostName)
+}
+
+func GetHumanHostName(hostName string) string {
+	if hostName == "default" {
+		return "default host"
+	} else {
+		return fmt.Sprintf("host '%s'", hostName)
+	}
 }
 
 func GetHostSize() (int, string) {
