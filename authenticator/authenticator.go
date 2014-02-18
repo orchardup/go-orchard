@@ -28,7 +28,7 @@ func PopulateToken(httpClient *api.HTTPClient) error {
 	}
 
 	if _, err := os.Stat(tokenFile); os.IsNotExist(err) {
-		token, err := GetTokenByPromptingUser(httpClient)
+		token, err := GetTokenByPromptingUser(*httpClient)
 		if err != nil {
 			return err
 		}
@@ -86,14 +86,13 @@ func GetTokenDir() (string, error) {
 	return tokenDir, nil
 }
 
-func GetTokenByPromptingUser(httpClient *api.HTTPClient) (string, error) {
+func GetTokenByPromptingUser(httpClient api.HTTPClient) (string, error) {
 	username, password := Prompt()
 
 	token, err := httpClient.GetAuthToken(username, password)
 	if err != nil {
 		return "", err
 	}
-	httpClient.Token = token
 
 	return token, nil
 }
