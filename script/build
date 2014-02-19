@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+BUILD_DIR=build
+
+if [ -e "$BUILD_DIR" ]; then
+  rm -r $BUILD_DIR
+fi
+
+mkdir $BUILD_DIR
+
+TARGETS="darwin linux"
+
+for t in $TARGETS; do
+  path="build/$t"
+  GOOS="$t" go build -o "$path"
+  echo "built: $path"
+done
