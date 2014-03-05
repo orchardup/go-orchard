@@ -1,6 +1,11 @@
 Change log
 ==========
 
+2.0.5 (2014-03-05)
+------------------
+
+- `orchard proxy` prints instructions for setting the DOCKER_HOST environment variable
+
 2.0.4 (2014-02-18)
 ------------------
 
