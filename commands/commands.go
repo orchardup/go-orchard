@@ -288,7 +288,9 @@ func RunProxy(cmd *Command, args []string) error {
 	}
 
 	return WithDockerProxy(specifiedURL, *flProxyHost, func(listenURL string) error {
-		fmt.Fprintf(os.Stderr, "Started proxy at %s\n", listenURL)
+		fmt.Fprintf(os.Stderr, `Started proxy. Use it by setting your Docker host:
+export DOCKER_HOST=%s
+`, listenURL)
 
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGKILL)
