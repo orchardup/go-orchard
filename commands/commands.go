@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/orchardup/go-orchard/api"
 	"github.com/orchardup/go-orchard/authenticator"
 	"github.com/orchardup/go-orchard/proxy"
 	"github.com/orchardup/go-orchard/tlsconfig"
@@ -54,6 +55,7 @@ var All = []*Command{
 	Hosts,
 	Docker,
 	Proxy,
+	IP,
 }
 
 var HostSubcommands = []*Command{
@@ -67,6 +69,7 @@ func init() {
 	RemoveHost.Run = RunRemoveHost
 	Docker.Run = RunDocker
 	Proxy.Run = RunProxy
+	IP.Run = RunIP
 }
 
 var Hosts = &Command{
@@ -150,6 +153,16 @@ Instead, you can specify a URL to listen on, which can be a socket or TCP addres
 }
 
 var flProxyHost = Proxy.Flag.String("H", "", "")
+
+var IP = &Command{
+	UsageLine: "ip [NAME]",
+	Short:     "Print a hosts's IP address to stdout",
+	Long: `Print a hosts's IP address to stdout.
+
+You can optionally specify which host - if you don't, the default
+host (named 'default') will be assumed.
+`,
+}
 
 func RunHosts(cmd *Command, args []string) error {
 	list := len(args) == 0 || (len(args) == 1 && args[0] == "ls")
@@ -301,6 +314,22 @@ export DOCKER_HOST=%s
 	})
 }
 
+func RunIP(cmd *Command, args []string) error {
+	if len(args) > 1 {
+		return cmd.UsageError("`orchard ip` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+	}
+
+	hostName, _ := GetHostName(args)
+
+	host, err := GetHost(hostName)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(os.Stdout, host.IPAddress)
+	return nil
+}
+
 func WithDockerProxy(listenURL, hostName string, callback func(string) error) error {
 	if hostName == "" {
 		hostName = "default"
@@ -355,21 +384,11 @@ func ListenArgs(url string) (string, string, error) {
 }
 
 func MakeProxy(listenType, listenAddr string, hostName string) (*proxy.Proxy, error) {
-	httpClient, err := authenticator.Authenticate()
+	host, err := GetHost(hostName)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := httpClient.GetHost(hostName)
-	if err != nil {
-		// HACK. api.go should decode JSON and return a specific type of error for this case.
-		if strings.Contains(err.Error(), "Not found") {
-			humanName := GetHumanHostName(hostName)
-			return nil, fmt.Errorf("%s doesn't seem to be running.\nYou can create it with `orchard hosts create %s`.", utils.Capitalize(humanName), hostName)
-		}
-
-		return nil, err
-	}
 	destination := host.IPAddress + ":4243"
 
 	certData := []byte(host.ClientCert)
@@ -442,4 +461,24 @@ func GetHostSize() (int, string) {
 	}
 
 	return int(megs), sizeString
+}
+
+func GetHost(hostName string) (*api.Host, error) {
+	httpClient, err := authenticator.Authenticate()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := httpClient.GetHost(hostName)
+	if err != nil {
+		// HACK. api.go should decode JSON and return a specific type of error for this case.
+		if strings.Contains(err.Error(), "Not found") {
+			humanName := GetHumanHostName(hostName)
+			return nil, fmt.Errorf("%s doesn't seem to be running.\nYou can create it with `orchard hosts create %s`.", utils.Capitalize(humanName), hostName)
+		}
+
+		return nil, err
+	}
+
+	return host, nil
 }
