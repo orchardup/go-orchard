@@ -54,6 +54,7 @@ var All = []*Command{
 	Hosts,
 	Docker,
 	Proxy,
+	IP,
 }
 
 var HostSubcommands = []*Command{
@@ -67,6 +68,7 @@ func init() {
 	RemoveHost.Run = RunRemoveHost
 	Docker.Run = RunDocker
 	Proxy.Run = RunProxy
+	IP.Run = RunIP
 }
 
 var Hosts = &Command{
@@ -150,6 +152,16 @@ Instead, you can specify a URL to listen on, which can be a socket or TCP addres
 }
 
 var flProxyHost = Proxy.Flag.String("H", "", "")
+
+var IP = &Command{
+	UsageLine: "ip [NAME]",
+	Short:     "Print a hosts's IP address to stdout",
+	Long: `Print a hosts's IP address to stdout.
+
+You can optionally specify which host - if you don't, the default
+host (named 'default') will be assumed.
+`,
+}
 
 func RunHosts(cmd *Command, args []string) error {
 	list := len(args) == 0 || (len(args) == 1 && args[0] == "ls")
@@ -299,6 +311,32 @@ export DOCKER_HOST=%s
 		fmt.Fprintln(os.Stderr, "\nStopping proxy")
 		return nil
 	})
+}
+
+func RunIP(cmd *Command, args []string) error {
+	if len(args) > 1 {
+		return cmd.UsageError("`orchard ip` expects at most 1 argument, but got more: %s", strings.Join(args[1:], " "))
+	}
+
+	hostName, humanName := GetHostName(args)
+
+	httpClient, err := authenticator.Authenticate()
+	if err != nil {
+		return err
+	}
+
+	host, err := httpClient.GetHost(hostName)
+	if err != nil {
+		// HACK. api.go should decode JSON and return a specific type of error for this case.
+		if strings.Contains(err.Error(), "Not found") {
+			return fmt.Errorf("%s doesn't seem to be running.\nYou can create it with `orchard hosts create %s`.", utils.Capitalize(humanName), hostName)
+		}
+
+		return err
+	}
+
+	fmt.Fprintln(os.Stdout, host.IPAddress)
+	return nil
 }
 
 func WithDockerProxy(listenURL, hostName string, callback func(string) error) error {
