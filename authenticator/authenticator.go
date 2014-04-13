@@ -57,7 +57,7 @@ func GetAPIURL() string {
 	apiURL := os.Getenv("ORCHARD_API_URL")
 
 	if apiURL == "" {
-		apiURL = "https://orchardup.com/api/v2"
+		apiURL = "https://api.orchardup.com/v2"
 	}
 
 	return apiURL
@@ -67,6 +67,12 @@ func GetTokenFilePath(baseURL string) (string, error) {
 	tokenDir, err := GetTokenDir()
 	if err != nil {
 		return "", err
+	}
+
+	// HACK: API URL used to be orchard.com/api, don't invalidate those
+	// tokens
+	if baseURL == "https://api.orchardup.com/v2" {
+		baseURL = "https://orchardup.com/api/v2"
 	}
 
 	h := md5.New()
