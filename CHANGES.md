@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.0.6 (2014-04-25)
+------------------
+
+- Added `orchard ip` command for printing a host's IP address to stdout
+- New Orchard API URL
+
 2.0.5 (2014-03-05)
 ------------------
 
