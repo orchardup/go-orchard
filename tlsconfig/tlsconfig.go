@@ -3,11 +3,23 @@ package tlsconfig
 import (
 	"crypto/x509"
 	"github.com/orchardup/go-orchard/vendor/crypto/tls"
+	"io/ioutil"
+	"os"
 )
 
 func GetTLSConfig(clientCertPEMData, clientKeyPEMData []byte) (*tls.Config, error) {
 	certPool := x509.NewCertPool()
-	certPool.AppendCertsFromPEM([]byte(orchardCerts))
+
+	certChainPath := os.Getenv("ORCHARD_HOST_CA")
+	if certChainPath != "" {
+		certChainData, err := ioutil.ReadFile(certChainPath)
+		if err != nil {
+			return nil, err
+		}
+		certPool.AppendCertsFromPEM(certChainData)
+	} else {
+		certPool.AppendCertsFromPEM([]byte(orchardCerts))
+	}
 
 	clientCert, err := tls.X509KeyPair(clientCertPEMData, clientKeyPEMData)
 	if err != nil {
