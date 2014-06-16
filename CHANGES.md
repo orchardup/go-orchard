@@ -1,6 +1,11 @@
 Change log
 ==========
 
+2.0.7 (2014-06-16)
+------------------
+
+- Pass environment variables through to Docker client.
+
 2.0.6 (2014-04-25)
 ------------------
 
