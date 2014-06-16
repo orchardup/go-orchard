@@ -283,7 +283,7 @@ func RunRemoveHost(cmd *Command, args []string) error {
 
 func RunDocker(cmd *Command, args []string) error {
 	return WithDockerProxy("", *flDockerHost, func(listenURL string) error {
-		err := CallDocker(args, []string{"DOCKER_HOST=" + listenURL})
+		err := CallDocker(args, listenURL)
 		if err != nil {
 			return fmt.Errorf("Docker exited with error")
 		}
@@ -404,14 +404,15 @@ func MakeProxy(listenType, listenAddr string, hostName string) (*proxy.Proxy, er
 	), nil
 }
 
-func CallDocker(args []string, env []string) error {
+func CallDocker(args []string, dockerHost string) error {
 	dockerPath := GetDockerPath()
 	if dockerPath == "" {
 		return errors.New("Can't find `docker` executable in $PATH.\nYou might need to install it: http://docs.docker.io/en/latest/installation/#installation-list")
 	}
 
+	os.Setenv("DOCKER_HOST", dockerHost)
+
 	cmd := exec.Command(dockerPath, args...)
-	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
