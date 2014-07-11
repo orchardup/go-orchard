@@ -52,10 +52,10 @@ func (c *Command) UsageError(format string, args ...interface{}) error {
 }
 
 var All = []*Command{
-	Hosts,
 	Docker,
-	Proxy,
+	Hosts,
 	IP,
+	Proxy,
 }
 
 var HostSubcommands = []*Command{
