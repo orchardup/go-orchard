@@ -46,16 +46,18 @@ func (c *Command) Usage() {
 
 func (c *Command) UsageError(format string, args ...interface{}) error {
 	fmt.Fprintf(os.Stderr, format, args...)
-	fmt.Fprintf(os.Stderr, "\nUsage: %s\n", c.UsageLine)
+	fmt.Fprintf(os.Stderr, "\nUsage: %s\n\n", c.UsageLine)
+	fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(c.Long))
 	os.Exit(2)
 	return fmt.Errorf(format, args...)
 }
 
 var All = []*Command{
-	Hosts,
 	Docker,
-	Proxy,
+	Hosts,
 	IP,
+	Proxy,
+	Run,
 }
 
 var HostSubcommands = []*Command{
@@ -70,6 +72,7 @@ func init() {
 	Docker.Run = RunDocker
 	Proxy.Run = RunProxy
 	IP.Run = RunIP
+	Run.Run = RunRun
 }
 
 var Hosts = &Command{
@@ -163,6 +166,23 @@ You can optionally specify which host - if you don't, the default
 host (named 'default') will be assumed.
 `,
 }
+
+var Run = &Command{
+	UsageLine: "run [-H HOST] COMMAND [ARGS...]",
+	Short:     "Run a command with the DOCKER_HOST envvar set",
+	Long: `Start a proxy to an Orchard host and run a command locally
+with the DOCKER_HOST environment variable set.
+
+For example:
+
+$ orchard run fig up
+
+You can optionally specify which host - if you don't, the default
+host (named 'default') will be assumed.
+`,
+}
+
+var flRunHost = Run.Flag.String("H", "", "")
 
 func RunHosts(cmd *Command, args []string) error {
 	list := len(args) == 0 || (len(args) == 1 && args[0] == "ls")
@@ -328,6 +348,21 @@ func RunIP(cmd *Command, args []string) error {
 
 	fmt.Fprintln(os.Stdout, host.IPAddress)
 	return nil
+}
+
+func RunRun(cmd *Command, args []string) error {
+	if len(args) < 1 {
+		return cmd.UsageError("`orchard run` expects at least 1 argument")
+	}
+	return WithDockerProxy("", *flRunHost, func(listenURL string) error {
+		os.Setenv("DOCKER_HOST", listenURL)
+
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	})
 }
 
 func WithDockerProxy(listenURL, hostName string, callback func(string) error) error {
