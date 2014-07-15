@@ -1,6 +1,14 @@
 Change log
 ==========
 
+2.1.0 (2014-07-14)
+------------------
+
+- There's now an `orchard run` command for running local commands on your Orchard host. It starts an Orchard proxy, sets the `DOCKER_HOST` environment variable, then runs a local command. For example:
+  
+        $ orchard run fig up
+
+
 2.0.7 (2014-06-16)
 ------------------
 
